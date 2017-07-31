@@ -1,6 +1,6 @@
 #include "tournament.h"
 
-Tournament::Tournament()
+Tournament::Tournament():name(name)
 {
 
 }

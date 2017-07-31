@@ -34,6 +34,8 @@ Project {
             "matchmodel.cpp",
             "matchmodel.h",
             "qml.qrc",
+            "round.cpp",
+            "round.h",
             "tournament.cpp",
             "tournament.h",
         ]
