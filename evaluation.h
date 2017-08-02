@@ -10,8 +10,8 @@ public:
     float current;
     int depth;
     float change;
-    string movePrevious;
-    string moveCurrent;
+    std::string movePrevious;
+    std::string moveCurrent;
 };
 
 #endif // EVALUATION_H

@@ -3,11 +3,12 @@
 #include <vector>
 #include "match.h"
 
-class Round
+#include "tournamentsitem.h"
+
+class Round : public TournamentsItem
 {
 public:
     Round();
-    vector<Match> matches;
 };
 
 #endif // ROUND_H

@@ -1,7 +1,7 @@
 #include "match.h"
-#include "QString"
 
-Match::Match():
+Match::Match(std::string result, std::string white, std::string black, int priority, std::string position):
+    TournamentsItem(0,0),
     result(result),
     deep(Evaluation()),
     quick(Evaluation()),
@@ -9,6 +9,16 @@ Match::Match():
     black(black),
     priority(priority),
     position(position)
+
 {
 
+}
+
+
+int Match::columnCount() const
+{
+}
+
+QVariant Match::data(int column) const
+{
 }

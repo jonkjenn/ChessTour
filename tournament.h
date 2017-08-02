@@ -3,14 +3,15 @@
 #include <string>
 #include <vector>
 #include "round.h"
+#include "tournamentsitem.h"
 
-class Tournament
+class Tournament: public TournamentsItem
 {
 public:
-    Tournament(string name = "Unnamed Tournament");
+    ~Tournament();
+    Tournament(std::string name = "Unnamed Tournament");
     std::string name;
-    vector<Round> rounds;
-
+    int columnCount() const override;
 };
 
 #endif // TOURNAMENT_H
