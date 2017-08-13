@@ -1,14 +1,13 @@
 #include "tournamentsitem.h"
 
-TournamentsItem::TournamentsItem(TournamentsItem *parentItem, int row):
-    parent(parentItem),row(row)
+TournamentsItem::TournamentsItem(TournamentsItem *parentItem, ItemType type):
+    parent(parentItem),tourType(type)
 {
-
 }
 
-TournamentsItem *TournamentsItem::child(int pos) const
+TournamentsItem *TournamentsItem::child(int position) const
 {
-    return childItems[pos];
+    return childItems[position];
 }
 
 int TournamentsItem::childCount() const
@@ -19,4 +18,9 @@ int TournamentsItem::childCount() const
 TournamentsItem *TournamentsItem::parentItem() const
 {
     return this->parent;
+}
+
+void TournamentsItem::addChild(TournamentsItem *child)
+{
+    childItems.append(child);
 }

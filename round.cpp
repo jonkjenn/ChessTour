@@ -1,6 +1,18 @@
 #include "round.h"
 
-Round::Round()
+Round::Round(TournamentsItem *parent):TournamentsItem(parent,ItemType::Round)
 {
 
+}
+
+QVariant Round::data(int role) const
+{
+    switch(role){
+    case RoundRoles::NumberRole:
+        return number;
+    case RoundRoles::DateRole:
+        return date;
+    }
+
+    return QVariant();
 }

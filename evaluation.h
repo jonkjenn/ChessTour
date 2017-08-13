@@ -1,6 +1,6 @@
 #ifndef EVALUATION_H
 #define EVALUATION_H
-#include <string>
+#include <QString>
 
 class Evaluation
 {
@@ -10,8 +10,8 @@ public:
     float current;
     int depth;
     float change;
-    std::string movePrevious;
-    std::string moveCurrent;
+    QString movePrevious;
+    QString moveCurrent;
 };
 
 #endif // EVALUATION_H

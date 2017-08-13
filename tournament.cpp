@@ -1,16 +1,18 @@
 #include "tournament.h"
 
-Tournament::~Tournament()
+Tournament::Tournament(TournamentsItem *parent,QString name):TournamentsItem(parent,ItemType::Tournament),name(name)
 {
-
-}
-
-Tournament::Tournament(std::string name):name(name)
-{
-
 }
 
 int Tournament::columnCount() const
 {
     return 1;
+}
+
+QVariant Tournament::data(int role) const
+{
+    switch(role){
+        case TournamentRoles::NameRole:
+            return this->name;
+    }
 }
