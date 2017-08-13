@@ -1,24 +1,34 @@
 #ifndef TOURNAMENTSITEM_H
 #define TOURNAMENTSITEM_H
 
+#include <QObject>
 #include <QVector>
 #include <QVariant>
+#include <QNetworkReply>
 
 class TournamentsItem
 {
 public:
-    TournamentsItem(TournamentsItem* parentItem = 0,int row=0);
-    TournamentsItem *child(int pos) const;
+    enum ItemType{
+        Root,
+        Tournament,
+        Round,
+        Match
+    };
+
+    TournamentsItem(TournamentsItem* parentItem = 0,ItemType type=Root);
+    TournamentsItem *child(int position) const;
     int childCount() const;
     virtual int columnCount() const{
         return 0;
     }
-    virtual QVariant data(int column) const{
+    virtual QVariant data(int role) const{
         return QVariant();
     }
-    const int row;
     TournamentsItem* parentItem() const;
     virtual ~TournamentsItem(){}
+    void addChild(TournamentsItem*);
+    ItemType tourType;
 private:
     QVector<TournamentsItem*> childItems;
     TournamentsItem *parent = nullptr;

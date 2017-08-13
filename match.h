@@ -1,22 +1,45 @@
 #ifndef MATCH_H
 #define MATCH_H
 
-#include <string>
+#include <QVariant>
+#include <QString>
 #include "tournamentsitem.h"
 #include "evaluation.h"
 
 class Match: public TournamentsItem
 {
 public:
-    Match(std::string result = "*",std::string white = "White",std::string black = "Black", int priority = 1, std::string position = "");
+    Match(TournamentsItem *parent, QString result = "*",QString white = "White",QString black = "Black", int priority = 1, QString position = "");
 
-    std::string result;
+    QString result;
     Evaluation deep;
     Evaluation quick;
-    std::string white;
-    std::string black;
+    QString white;
+    QString black;
     int priority;
-    std::string position;
+    QString position;
+
+    enum MatchRoles{
+        ResultRole = Qt::UserRole +1,
+        WhiteRole,
+        BlackRole,
+        PriorityRole,
+        PositionRole,
+
+        DeepPreviousRole,
+        DeepCurrentRole,
+        DeepDepthRole,
+        DeepChangeRole,
+        DeepPreviousMoveRole,
+        DeepCurrentMoveRole,
+
+        QuickPreviousRole,
+        QuickCurrentRole,
+        QuickDepthRole,
+        QuickChangeRole,
+        QuickPreviousMoveRole,
+        QuickCurrentMoveRole
+    };
 
     // TournamentsItem interface
 public:

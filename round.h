@@ -1,14 +1,23 @@
 #ifndef ROUND_H
 #define ROUND_H
-#include <vector>
 #include "match.h"
-
 #include "tournamentsitem.h"
+#include <QString>
 
 class Round : public TournamentsItem
 {
 public:
-    Round();
+    Round(TournamentsItem *parent);
+    int number;
+    QString date;
+
+    enum RoundRoles{
+        NumberRole = Qt::UserRole +1,
+        DateRole
+    };
+
+    // TournamentsItem interface
+    QVariant data(int role) const override;
 };
 
 #endif // ROUND_H
