@@ -31,7 +31,6 @@ CppApplication {
         //"matchmodel.cpp",
         //"matchmodel.h",
     files: [
-        "LoginDialog.qml",
         "backend.cpp",
         "backend.h",
         "chess24.cpp",

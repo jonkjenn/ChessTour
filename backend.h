@@ -2,26 +2,42 @@
 #define BACKEND_H
 
 #include <QObject>
-#include "tournamentsmodel.h"
 #include <QtNetwork>
 #include "chess24.h"
-#include <QQmlApplicationEngine>
 
-class BackEnd:public QObject
+class Backend:public QObject
 {
     Q_OBJECT
+    Q_PROPERTY(bool loggedin READ loggedIn NOTIFY loggedInChanged)
+    Q_PROPERTY(QString username READ username WRITE setUsername NOTIFY usernameChanged)
+    Q_PROPERTY(QString password READ password WRITE setPassword NOTIFY passwordChanged)
 public:
-    BackEnd(QObject *);
+    Backend(QObject *);
+    bool loggedIn();
+    QString username();
+    QString password();
+    void setUsername(QString);
+    void setPassword(QString);
 private:
-    TournamentsModel tm{this};
+    void setLoggedIn(bool);
+    bool m_loggedIn = false;
+    QString m_username;
+    QString m_password;
     QNetworkReply *reply;
     QNetworkAccessManager qnam;
     Chess24 c24{this,qnam};
-    QQmlApplicationEngine engine;
 
+   signals:
+    void loggedInChanged();
+    void usernameChanged();
+    void passwordChanged();
+
+public slots:
+    void loginResult(UserData data);
+    void login();
 private slots:
     void httpFinished();
-    void loggedIn(UserData);
+    void loginAccepted();
 };
 
 #endif // BACKEND_H

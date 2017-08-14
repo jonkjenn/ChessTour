@@ -7,8 +7,10 @@
 #include <QQmlApplicationEngine>
 #include "chess24.h"
 #include <QQmlContext>
+#include <QQmlComponent>
+#include <QQuickItem>
 
-BackEnd::BackEnd(QObject *parent):QObject(parent)
+Backend::Backend(QObject *parent):QObject(parent)
 {
     /*//Chess24 c24;
     QUrl pgnurl("http://theweekinchess.com/assets/files/pgn/chgbr17.pgn");
@@ -17,22 +19,69 @@ BackEnd::BackEnd(QObject *parent):QObject(parent)
     QNetworkRequest request(pgnurl);
     request.setHeader(QNetworkRequest::UserAgentHeader,"Mozilla Firefox");
     reply = qnam.get(request);
-    connect(reply,&QNetworkReply::finished,this,&BackEnd::httpFinished);**/
+    connect(reply,&QNetworkReply::finished,this,&Backend::httpFinished);**/
 
-    TournamentsModel *tm = new TournamentsModel(this);
-    TournamentViewModel *tvm = new TournamentViewModel(this);
-    tvm->setSourceModel(tm);
 
-    engine.rootContext()->setContextProperty("tourModel",tvm);
-    engine.load(QUrl(QLatin1String("qrc:/main.qml")));
-    /*if (engine.rootObjects().isEmpty())
-        return -1;*/
+    /*foreach(auto o,engine.rootObjects()){
+        qDebug() << o->objectName();
+    }*/
 
-    c24.login("test","test");
-    connect(&c24,&Chess24::loginResult,this,&BackEnd::loggedIn);
+    /*QQmlComponent loginComponent(&engine,QUrl(QStringLiteral("qrc:/LoginDialog.qml")));
+    foreach(auto error,loginComponent.errors()){
+        qDebug() << error;
+    }
+
+    QObject *loginObject = loginComponent.create();
+    loginObject->setParent(engine.rootObjects().first());
+    QQuickItem *loginDialog = qobject_cast<QQuickItem*>(loginObject);
+    loginDialog->setParentItem(engine.rootObjects().first());
+    qDebug() << engine.rootObjects().first()->objectName();
+    qDebug() << loginObject->parent();
+    connect(loginObject,SIGNAL(accepted()),this,SLOT(loginAccepted()));
+
+
+    foreach(auto c, engine.children().first()->children()){
+        qDebug() << c->objectName();
+    }*/
+
+    //c24.login("test","test");
+    //connect(&c24,&Chess24::loginResult,this,&Backend::loggedIn);
 }
 
-void BackEnd::httpFinished()
+void Backend::setLoggedIn(bool loggedIn)
+{
+    m_loggedIn = loggedIn;
+    emit loggedInChanged();
+}
+
+bool Backend::loggedIn()
+{
+    return m_loggedIn;
+}
+
+QString Backend::username()
+{
+    return m_username;
+}
+
+QString Backend::password()
+{
+    return m_password;
+}
+
+void Backend::setUsername(QString username)
+{
+    m_username = username;
+    emit usernameChanged();
+}
+
+void Backend::setPassword(QString)
+{
+    m_password = password();
+    emit passwordChanged();
+}
+
+void Backend::httpFinished()
 {
     std::cout << "Got data" << std::endl;
     QByteArray data = reply->readAll();
@@ -50,12 +99,24 @@ void BackEnd::httpFinished()
     }
 }
 
-void BackEnd::loggedIn(UserData data)
+void Backend::loginResult(UserData data)
 {
     if(data.result){
         qDebug() << "Logged in";
+        setLoggedIn(true);
     }else{
         qDebug() << "Login failed";
-        //TODO: Retry login gui
+        setLoggedIn(false);
     }
+}
+
+void Backend::login()
+{
+    c24.login("test","test");
+    connect(&c24,&Chess24::loginResult,this,&Backend::loginResult);
+}
+
+void Backend::loginAccepted()
+{
+    qDebug() << "Dialog accepted";
 }
