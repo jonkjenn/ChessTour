@@ -21,8 +21,6 @@ Project{
             "../tournament.h",
             "../tournamentsitem.cpp",
             "../tournamentsitem.h",
-            "../tournamentsroot.cpp",
-            "../tournamentsroot.h",
             "../tournamentsmodel.cpp",
             "../tournamentsmodel.h",
         ]
