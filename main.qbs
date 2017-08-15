@@ -3,6 +3,7 @@ import qbs
 CppApplication {
     Depends { name: "Qt.core" }
     Depends { name: "Qt.network" }
+    Depends { name: "Qt.websockets" }
     Depends { name: "Qt.quick" }
     Depends { name: "pgnmodule" }
 
@@ -38,13 +39,19 @@ CppApplication {
         "chess24websocket.cpp",
         "chess24websocket.h",
         "datasource.h",
+        "disknetworkcookiejar.cpp",
+        "disknetworkcookiejar.h",
         "evaluation.cpp",
         "evaluation.h",
         "main.cpp",
         "match.cpp",
         "match.h",
+        "preparechess24ws.cpp",
+        "preparechess24ws.h",
         "round.cpp",
         "round.h",
+        "socketio.cpp",
+        "socketio.h",
         "tournament.cpp",
         "tournament.h",
         "tournamentsitem.cpp",
