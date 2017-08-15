@@ -12,8 +12,11 @@ DiskNetworkCookieJar::DiskNetworkCookieJar()
 
 void DiskNetworkCookieJar::saveCookieJar(){
     ofstream file;
-    file.open("cookies.jar");
+    file.open("cookies.jar");//Content is overwritten
 
+    //todo: error handling
+
+    //Save each cookie as a line in the file
     for(auto c:allCookies()){
         file << c.toRawForm().toStdString() << "\n";
     }
@@ -24,8 +27,11 @@ void DiskNetworkCookieJar::saveCookieJar(){
 void DiskNetworkCookieJar::loadCookieJar(QNetworkCookieJar &jar){
     ifstream file;
     file.open("cookies.jar");
+    //todo:: error handling
     string line;
     while(getline(file,line)){
+
+        //Empty if parsing error
         QList<QNetworkCookie> cookies = QNetworkCookie::parseCookies(QByteArray::fromStdString(line));
         for(auto c:cookies){
             jar.insertCookie(c);
