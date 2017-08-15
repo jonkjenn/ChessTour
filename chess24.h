@@ -8,6 +8,7 @@
 #include <optional>
 
 struct UserData{
+    enum LoginSource{USERPASS,COOKIE};
     bool result = false;
     QString authToken;
     QString uuid;
@@ -16,6 +17,7 @@ struct UserData{
     QString name;
     bool isPremium=false;
     bool isRegistered=false;
+    LoginSource loginSource;
 };
 
 class Chess24: public QObject
@@ -31,6 +33,7 @@ private:
 public:
     Chess24(QObject *parent,QNetworkAccessManager &);
     void login(QString username, QString password);
+    void downloadUserData(UserData::LoginSource login = UserData::LoginSource::COOKIE);
 private slots:
     void redirected(const QUrl &);
     void gotError(QNetworkReply::NetworkError);

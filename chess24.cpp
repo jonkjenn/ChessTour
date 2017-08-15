@@ -19,7 +19,6 @@ void Chess24::login(QString username, QString password)
     //connect(&qnam,&QNetworkAccessManager::sslErrors,this,&Chess24::sslErrors);
 }
 
-
 void Chess24::httpFinished(QNetworkReply *reply, QString username, QString password)
 {
     QByteArray data = reply->readAll();
@@ -47,19 +46,29 @@ void Chess24::httpFinished(QNetworkReply *reply, QString username, QString passw
     req.setRawHeader(QByteArray("Referer"),QByteArray("https://chess24.com/en/login"));
     req.setRawHeader("User-Agent","Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/55.0.2883.87 Safari/537.36");
 
+    qDebug() << username << " "<< password << " " << csrf.value();
+
     //Send login post
     QNetworkReply * rep = qnam.post(req,qu.query(QUrl::FullyEncoded).toUtf8());
     connect(rep,&QNetworkReply::finished,[this](){
         //Check if logged in by using this api call
-        QNetworkRequest req(QUrl("https://chess24.com/api/web/UserAPI/getUserData"));
-        QNetworkReply *urep = qnam.get(req);
-        connect(urep,&QNetworkReply::finished,[this,urep]{
-            QByteArray data = urep->readAll();
-            emit loginResult(getUserData(data));
-        });
+        downloadUserData(UserData::LoginSource::USERPASS);
     });
     connect(rep,&QNetworkReply::redirected,this,&Chess24::redirected);
     connect(rep,static_cast<void(QNetworkReply::*)(QNetworkReply::NetworkError)>(&QNetworkReply::error),this,&Chess24::gotError);
+}
+
+void Chess24::downloadUserData(UserData::LoginSource source){
+
+        QNetworkRequest req(QUrl("https://chess24.com/api/web/UserAPI/getUserData"));
+        QNetworkReply *urep = qnam.get(req);
+        connect(urep,&QNetworkReply::finished,[this,urep,source]{
+            QByteArray data = urep->readAll();
+            qDebug() << data;
+            UserData udat = getUserData(data);
+            udat.loginSource = source;
+            emit loginResult(udat);
+        });
 }
 
 
@@ -77,6 +86,7 @@ UserData Chess24::getUserData(const QByteArray &data){
     QJsonObject level = userdata["level"].toObject();
     d.isRegistered = level["isRegistered"].toBool();
     d.isPremium = level["isPremium"].toBool();
+    d.result = true;
     return d;
 }
 
