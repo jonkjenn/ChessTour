@@ -71,3 +71,7 @@ Thumbs.db
 *.dll
 *.exe
 
+
+# Qt qbs
+*.qbs.user
+*.qbs.user.*
