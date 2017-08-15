@@ -46,6 +46,8 @@ Backend::Backend(QObject *parent):QObject(parent)
 
     //c24.login("test","test");
     //connect(&c24,&Chess24::loginResult,this,&Backend::loggedIn);
+    DiskNetworkCookieJar::loadCookieJar(jar);
+    qnam.setCookieJar(&jar);
 }
 
 void Backend::setLoggedIn(bool loggedIn)

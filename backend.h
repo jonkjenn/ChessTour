@@ -4,6 +4,7 @@
 #include <QObject>
 #include <QtNetwork>
 #include "chess24.h"
+#include "disknetworkcookiejar.h"
 
 class Backend:public QObject
 {
@@ -26,6 +27,7 @@ private:
     QNetworkReply *reply;
     QNetworkAccessManager qnam;
     Chess24 c24{this,qnam};
+    DiskNetworkCookieJar jar;
 
    signals:
     void loggedInChanged();
