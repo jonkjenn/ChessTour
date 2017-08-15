@@ -9,9 +9,6 @@ public:
 
     // QNetworkCookieJar interface
 public:
-    bool setCookiesFromUrl(const QList<QNetworkCookie> &cookieList, const QUrl &url) override;
-    bool insertCookie(const QNetworkCookie &cookie) override;
-    bool deleteCookie(const QNetworkCookie &cookie) override;
     static void loadCookieJar(QNetworkCookieJar &jar);
     void saveCookieJar();
 };
