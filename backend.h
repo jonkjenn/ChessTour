@@ -4,6 +4,8 @@
 #include <QObject>
 #include <QtNetwork>
 #include "chess24.h"
+#include "chess24websocket.h"
+#include "preparechess24ws.h"
 #include "disknetworkcookiejar.h"
 
 class Backend:public QObject
@@ -27,7 +29,11 @@ private:
     QNetworkReply *reply;
     QNetworkAccessManager qnam;
     Chess24 c24{this,qnam};
+    Chess24Websocket c24ws;
+    PrepareChess24WS prepc24;
     DiskNetworkCookieJar jar;
+    UserData data;
+
 
    signals:
     void loggedInChanged();
@@ -36,7 +42,7 @@ private:
 
 public slots:
     void loginResult(UserData data);
-    void login();
+    void login(QString username, QString password);
 private slots:
     void httpFinished();
     void loginAccepted();
