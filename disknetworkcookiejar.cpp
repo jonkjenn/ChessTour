@@ -37,5 +37,5 @@ void DiskNetworkCookieJar::loadCookieJar(QNetworkCookieJar &jar){
             jar.insertCookie(c);
         }
     }
-
+    file.close();
 }
