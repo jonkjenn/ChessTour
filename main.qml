@@ -38,7 +38,7 @@ ApplicationWindow {
                 implicitWidth: 250
                 id: username
                 KeyNavigation.tab: password
-                text: Backend.username
+                //text: Backend.username
                 focus: true
                 placeholderText: "Enter username/email"
             }
@@ -51,13 +51,13 @@ ApplicationWindow {
                 id: password
                 echoMode: TextField.PasswordEchoOnEdit
                 KeyNavigation.tab: username
-                text: Backend.password
+                //text: Backend.password
                 placeholderText: "Enter password"
             }
             RowLayout{
                 Button{
                     text: "Login"
-                    onClicked:Backend.login()
+                    onClicked:Backend.login(username.text,password.text)
                 }
                 Button{
                     text:"Cancel"
