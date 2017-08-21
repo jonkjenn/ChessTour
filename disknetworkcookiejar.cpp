@@ -14,7 +14,7 @@ void DiskNetworkCookieJar::saveCookieJar(){
     ofstream file;
     file.open("cookies.jar");//Content is overwritten
 
-    //todo: error handling
+    //TODO: error handling
 
     //Save each cookie as a line in the file
     for(auto c:allCookies()){
@@ -27,7 +27,7 @@ void DiskNetworkCookieJar::saveCookieJar(){
 void DiskNetworkCookieJar::loadCookieJar(QNetworkCookieJar &jar){
     ifstream file;
     file.open("cookies.jar");
-    //todo:: error handling
+    //TODO:: error handling
     string line;
     while(getline(file,line)){
 
