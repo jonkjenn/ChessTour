@@ -8,18 +8,17 @@ class TournamentViewModel : public QSortFilterProxyModel
 {
     Q_OBJECT
 private:
-    int tournamentId;
+    bool onlySubscribed;
 public:
-    TournamentViewModel(QObject *parent=Q_NULLPTR,int tournamentId=0);
+    TournamentViewModel(QObject *parent=Q_NULLPTR,bool onlySubscribed = false);
 
     // QAbstractItemModel interface
 public:
     QHash<int, QByteArray> roleNames() const override;
 
-    // QAbstractProxyModel interface
-public:
-    //QModelIndex mapToSource(const QModelIndex &proxyIndex) const override;
-    //QModelIndex mapFromSource(const QModelIndex &sourceIndex) const override;
+protected:
+    bool filterAcceptsRow(int source_row, const QModelIndex &source_parent) const override;
+    bool lessThan(const QModelIndex &source_left, const QModelIndex &source_right) const override;
 };
 
 #endif // TOURNAMENTVIEWMODEL_H

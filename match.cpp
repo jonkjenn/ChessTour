@@ -62,3 +62,16 @@ QVariant Match::data(int role) const
 
     return QVariant();
 }
+
+
+TournamentsItem *Match::child(int position) const
+{
+}
+
+int Match::childCount() const
+{
+}
+
+bool Match::addChild(TournamentsItem *)
+{
+}

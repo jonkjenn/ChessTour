@@ -36,6 +36,8 @@ CppApplication {
         "backend.h",
         "chess24.cpp",
         "chess24.h",
+        "chess24messages.cpp",
+        "chess24messages.h",
         "chess24websocket.cpp",
         "chess24websocket.h",
         "datasource.h",
@@ -48,6 +50,8 @@ CppApplication {
         "match.h",
         "preparechess24ws.cpp",
         "preparechess24ws.h",
+        "rootitem.cpp",
+        "rootitem.h",
         "round.cpp",
         "round.h",
         "socketio.cpp",
@@ -61,6 +65,8 @@ CppApplication {
         "qml.qrc",
         "tournamentviewmodel.cpp",
         "tournamentviewmodel.h",
+        "wsrequest.cpp",
+        "wsrequest.h",
     ]
 
     Group {     // Properties for the produced executable

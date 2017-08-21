@@ -8,19 +8,15 @@
 
 TournamentsModel::TournamentsModel(QObject *parent):QAbstractItemModel(parent)
 {
-    rootItem = new TournamentsItem(0,Tournament::ItemType::Root);
-    TournamentsItem *tm1 = new Tournament(rootItem,"Test tournament1");
-    rootItem->addChild(tm1);
+    rootItem = static_cast<TournamentsItem*>(&rootItemObject);
 }
 
 TournamentsModel::~TournamentsModel()
 {
-    delete(rootItem);
 }
 
 QModelIndex TournamentsModel::index(int row, int column, const QModelIndex &parent) const
 {
-    //Return invalid modelindex
     if(!hasIndex(row,column,parent)){
         return QModelIndex();
     }
@@ -29,15 +25,10 @@ QModelIndex TournamentsModel::index(int row, int column, const QModelIndex &pare
     if(!parent.isValid()){
         parentItem = rootItem;
     }else{
-        parentItem = static_cast<TournamentsItem*>(parent.internalPointer());
+         parentItem = static_cast<TournamentsItem*>(parent.internalPointer())->child(parent.row());
     }
 
-    TournamentsItem *childItem = parentItem->child(row);
-    if(childItem){
-        return createIndex(row,column,childItem);
-    }else{
-        return QModelIndex();//Return invalid index
-    }
+    return createIndex(row,column,parentItem);
 }
 
 QModelIndex TournamentsModel::parent(const QModelIndex &child) const
@@ -47,13 +38,13 @@ QModelIndex TournamentsModel::parent(const QModelIndex &child) const
     }
 
     TournamentsItem *childItem = static_cast<TournamentsItem*>(child.internalPointer());
-    TournamentsItem *parentItem = childItem->parentItem();
+    TournamentsItem *parentItem = static_cast<TournamentsItem*>(childItem->parentItem());
 
-    if (parentItem == rootItem){
+    if(childItem == rootItem){
         return QModelIndex();
     }
 
-    return createIndex(0,0,parentItem);
+    return createIndex(parentItem->position(childItem),0,parentItem);
 }
 
 int TournamentsModel::rowCount(const QModelIndex &parent) const
@@ -63,7 +54,7 @@ int TournamentsModel::rowCount(const QModelIndex &parent) const
     if(!parent.isValid()){
         parentItem = rootItem;
     }else{
-        parentItem = static_cast<TournamentsItem*>(parent.internalPointer());
+        parentItem = static_cast<TournamentsItem*>(parent.internalPointer())->child(parent.row());
     }
 
     return parentItem->childCount();
@@ -78,11 +69,7 @@ int TournamentsModel::columnCount(const QModelIndex &parent) const
         tm = rootItem;
     }
 
-    if(tm->childCount()==0){
-        return 0;
-    }else{
-        return tm->child(0)->columnCount();
-    }
+    return tm->columnCount();
 }
 
 QVariant TournamentsModel::data(const QModelIndex &index, int role) const
@@ -93,31 +80,14 @@ QVariant TournamentsModel::data(const QModelIndex &index, int role) const
 
     TournamentsItem *item = static_cast<TournamentsItem*>(index.internalPointer());
 
-    if(item->tourType == TournamentsItem::ItemType::Tournament){
-        Tournament *t = static_cast<Tournament*>(item);
-        return t->data(role);
-    }
+    /*if(item->tourType == TournamentsItem::ItemType::Root){
+        return item->child(index.row())->data(role);
+    }*/
 
-    return item->data(role);
+    return item->child(index.row())->data(role);
 }
 
 bool TournamentsModel::setData(const QModelIndex &index, const QVariant &value, int role)
-{
-}
-
-QVariant TournamentsModel::headerData(int section, Qt::Orientation orientation, int role) const
-{
-}
-
-bool TournamentsModel::setHeaderData(int section, Qt::Orientation orientation, const QVariant &value, int role)
-{
-}
-
-bool TournamentsModel::insertColumns(int column, int count, const QModelIndex &parent)
-{
-}
-
-bool TournamentsModel::removeColumns(int column, int count, const QModelIndex &parent)
 {
 }
 
@@ -142,4 +112,57 @@ bool TournamentsModel::hasChildren(const QModelIndex &parent) const
     return false;
 }
 
+bool TournamentsModel::addChild(const QModelIndex &parent, TournamentsItem *child)
+{
+    TournamentsItem *tm;
 
+    if(!parent.isValid()){
+        tm = rootItem;
+    }else{
+         tm = static_cast<TournamentsItem *>(parent.internalPointer());
+    }
+
+    if(tm == rootItem){
+        beginInsertRows(parent,tm->childCount(),tm->childCount());//TODO The index will be wrong if QMap is used since it is automatically sorted, not sure of real effect
+        tm->addChild(child);
+        endInsertRows();
+        return true;
+    }
+
+    return false;
+}
+
+bool TournamentsModel::addTournament(QString name,int originalOrder)
+{
+    Tournament *t = new Tournament(rootItem,name,originalOrder);
+    return addChild(QModelIndex(),t);
+}
+
+//TODO implement this
+bool TournamentsModel::addTournaments(QVariantList names)
+{
+
+    RootItem *root = static_cast<RootItem*>(rootItem);//TODO add addChildren to interface?
+
+    //Create index to avoid duplicates
+    QHash<QString,int> nameMap;
+    for(int i=0;i<root->childCount();++i){
+        nameMap.insert(root->child(i)->data(static_cast<int>(Tournament::TournamentRoles::NameRole)).toString(),i);
+    }
+
+    QVector<Tournament*> tournaments;
+    for(int i=0;i<names.length();++i){
+        //Avoid duplicates
+        if(nameMap.contains(names.at(i).toString())){continue;}
+
+        Tournament *t = new Tournament(rootItem,names.at(i).toString(),i);
+        tournaments.append(t);
+    }
+
+
+    beginInsertRows(QModelIndex(),root->childCount(),root->childCount() + tournaments.size()-1);
+    root->addChildren(tournaments);
+    endInsertRows();
+
+    return true;
+}

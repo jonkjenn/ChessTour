@@ -45,6 +45,12 @@ public:
 public:
     int columnCount() const override;
     QVariant data(int column) const override;
+
+    // TournamentsItem interface
+public:
+    TournamentsItem *child(int position) const override;
+    int childCount() const override;
+    bool addChild(TournamentsItem *) override;
 };
 
 #endif // MATCH_H

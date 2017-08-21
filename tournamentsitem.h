@@ -9,7 +9,7 @@
 class TournamentsItem
 {
 public:
-    enum ItemType{
+    enum class ItemType{
         Root,
         Tournament,
         Round,

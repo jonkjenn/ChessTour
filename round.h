@@ -18,6 +18,12 @@ public:
 
     // TournamentsItem interface
     QVariant data(int role) const override;
+
+    // TournamentsItem interface
+public:
+    TournamentsItem *child(int position) const override;
+    int childCount() const override;
+    bool addChild(TournamentsItem *) override;
 };
 
 #endif // ROUND_H

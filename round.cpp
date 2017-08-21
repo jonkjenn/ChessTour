@@ -16,3 +16,16 @@ QVariant Round::data(int role) const
 
     return QVariant();
 }
+
+
+TournamentsItem *Round::child(int position) const
+{
+}
+
+int Round::childCount() const
+{
+}
+
+bool Round::addChild(TournamentsItem *)
+{
+}

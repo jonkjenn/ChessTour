@@ -5,6 +5,7 @@ TournamentsItem::TournamentsItem(TournamentsItem *parentItem, ItemType type):
 {
 }
 
+TournamentsItem *TournamentsItem::parentItem()
 {
     return this->parent;
 }

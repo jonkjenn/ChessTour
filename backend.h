@@ -2,11 +2,16 @@
 #define BACKEND_H
 
 #include <QObject>
+#include <QQmlEngine>
 #include <QtNetwork>
+
 #include "chess24.h"
 #include "chess24websocket.h"
 #include "preparechess24ws.h"
 #include "disknetworkcookiejar.h"
+
+//Forward
+class TournamentsModel;
 
 class Backend:public QObject
 {
@@ -15,12 +20,12 @@ class Backend:public QObject
     Q_PROPERTY(QString username READ username WRITE setUsername NOTIFY usernameChanged)
     Q_PROPERTY(QString password READ password WRITE setPassword NOTIFY passwordChanged)
 public:
-    Backend(QObject *);
     bool loggedIn();
     QString username();
     QString password();
     void setUsername(QString);
     void setPassword(QString);
+    Backend(QObject *parent, TournamentsModel *tm);
 private:
     void setLoggedIn(bool);
     bool m_loggedIn = false;
@@ -33,7 +38,7 @@ private:
     PrepareChess24WS prepc24;
     DiskNetworkCookieJar jar;
     UserData data;
-
+    TournamentsModel *tm;
 
    signals:
     void loggedInChanged();

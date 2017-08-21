@@ -1,6 +1,7 @@
 #include "tournament.h"
 
-Tournament::Tournament(TournamentsItem *parent,QString name):TournamentsItem(parent,ItemType::Tournament),name(name)
+Tournament::Tournament(TournamentsItem *parent,QString name,int originalOrder):
+    TournamentsItem(parent,ItemType::Tournament),name(name), originalOrder(originalOrder)
 {
 }
 
@@ -11,8 +12,32 @@ int Tournament::columnCount() const
 
 QVariant Tournament::data(int role) const
 {
-    switch(role){
+    switch(static_cast<TournamentRoles>(role)){
         case TournamentRoles::NameRole:
             return this->name;
+    case TournamentRoles::OriginalOrderRole:
+        return this->originalOrder;
     }
+}
+
+
+TournamentsItem *Tournament::child(int position) const
+{
+    return rounds.at(position);
+}
+
+int Tournament::childCount() const
+{
+    return rounds.size();
+}
+
+bool Tournament::addChild(TournamentsItem *)
+{
+}
+
+
+int Tournament::position(TournamentsItem *item)
+{
+    Round *r = static_cast<Round*>(item);
+    return rounds.indexOf(r);
 }
