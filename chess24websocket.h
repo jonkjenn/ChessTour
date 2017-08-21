@@ -6,7 +6,11 @@
 #include <QString>
 #include <QSslError>
 #include <QAbstractSocket>
+#include <QMap>
 
+#include <memory>
+
+#include "wsrequest.h"
 #include "chess24.h"
 
 class QNetworkAccessManager;
@@ -20,16 +24,8 @@ public:
     void connectWS(UserData data, QString notificationServer, QString wssId);
     bool isConnected();
 
-    enum RequestActions{
-        getTournamentIds,
-        get,//Additional subselection in GetModels
-        getConversations
-    };
+    WSRequest *getTournamentIds();
 
-    enum GetModels{
-        webTournamentRedisAR,
-        BroadcastChessGameRedisAR
-    };
 
      enum MessageType{
         disconnect = 0,
@@ -52,9 +48,14 @@ public:
      enum ErrorAdvice{
              reconnect = 0
      };
+
+signals:
+     void connected();
 private:
     QNetworkAccessManager &qnam;
     UserData userData;
+    QMap<int,WSRequest*> requests;
+    WSRequest* createRequest(QString msg);
 
     QWebSocket ws;
     int message_id = 1;
@@ -66,7 +67,6 @@ private:
     void wssidRespons(QNetworkReply *);
     static QString parseNotficationServer(QString);
     static QString parseWSSId(QString);
-    QString buildEvent(QString message_id,QString name, QVariantMap args);
 
 private slots:
     void onConnected();

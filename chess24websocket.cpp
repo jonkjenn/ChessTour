@@ -5,6 +5,9 @@
 #include <QJsonObject>
 #include <QJsonArray>
 
+#include "chess24messages.h"
+
+
 Chess24Websocket::Chess24Websocket(QObject *parent,QNetworkAccessManager &qnam):
     QObject (parent),qnam(qnam)
 {
@@ -26,30 +29,27 @@ bool Chess24Websocket::isConnected()
     return m_isConnected;
 }
 
+WSRequest *Chess24Websocket::getTournamentIds()
+{
+   return createRequest(Chess24Messages::getTouramentIds(message_id));
+}
+
+WSRequest* Chess24Websocket::createRequest(QString msg)
+{
+    QMap<int,WSRequest*>::iterator it = requests.insert(message_id,new WSRequest(message_id,this));
+
+    qDebug() << "Sending message: " << msg;
+
+    ws.sendTextMessage(msg);
+
+    message_id+= 1;
+
+    return it.value();
+}
+
 void Chess24Websocket::setIsConnected(bool val)
 {
     m_isConnected = val;
-}
-
-QString Chess24Websocket::buildEvent(QString message_id, QString name, QVariantMap args)
-{
-
-    /*
-        QVariantMap map;
-        map.insert("name","connect");
-        QVariantMap args2;
-        args2.insert("isGuest",!userData.isPremium);
-        args2.insert("isPremium",userData.isPremium);
-        args2.insert("isAdmin",false);
-        args2.insert("userName",userData.name);
-        QJsonArray args;
-        args.append(userData.authToken);
-        args.append(QJsonObject::fromVariantMap(args2));
-        map.insert("args",args);
-        QJsonDocument response = QJsonDocument(QJsonObject::fromVariantMap(map));
-        //ws.sendTextMessage("5:1+::" + QString::fromUtf8(response.toJson()));
-        //qDebug().noquote() << "5:1+::" + response.toJson(QJsonDocument::Compact);
-        */
 }
 
 void Chess24Websocket::onConnected()
@@ -71,7 +71,7 @@ void Chess24Websocket::onTextReceived(QString message)
     QStringList parts = message.split(":");
 
     bool ok;
-    uint messageType = parts[0].toUInt(&ok);
+    int messageType = parts[0].toInt(&ok);
     if(!ok){
         qDebug() << "Error in parsing websocket message: " << message;
         return;
@@ -81,9 +81,16 @@ void Chess24Websocket::onTextReceived(QString message)
     case(MessageType::disconnect):
         break;
     case(MessageType::connect):
-        break;
+    {
+        WSRequest *req = createRequest(Chess24Messages::connect(userData,message_id));
+        QObject::connect(req,&WSRequest::finished,[this](){
+            emit connected();
+        });
+        return;
+    }
     case(MessageType::heartbeat):
-        break;
+        ws.sendTextMessage(message);
+        return;
     case(MessageType::message):
         break;
     case(MessageType::json):
@@ -91,7 +98,17 @@ void Chess24Websocket::onTextReceived(QString message)
     case(MessageType::event):
         break;
     case(MessageType::ack):
-        break;
+    {
+        //Id to the left of "+" and data to the right
+        QStringList ackParts = parts[3].split("+");
+        if(ackParts.length() != 2){return;}
+        bool ok = false;
+        int id = ackParts[0].toInt(&ok);//Get the message id
+        if(!ok){return;}
+        requests[id]->data(ackParts[1]);
+        requests.remove(id);
+        return;
+    }
     case(MessageType::error):
         break;
     case(MessageType::noop):
@@ -99,23 +116,6 @@ void Chess24Websocket::onTextReceived(QString message)
     }
 
 
-    /*
-    if(message == "1::"){
-        QVariantMap map;
-        map.insert("name","connect");
-        QVariantMap args2;
-        args2.insert("isGuest",!userData.isPremium);
-        args2.insert("isPremium",userData.isPremium);
-        args2.insert("isAdmin",false);
-        args2.insert("userName",userData.name);
-        QJsonArray args;
-        args.append(userData.authToken);
-        args.append(QJsonObject::fromVariantMap(args2));
-        map.insert("args",args);
-        QJsonDocument response = QJsonDocument(QJsonObject::fromVariantMap(map));
-        //ws.sendTextMessage("5:1+::" + QString::fromUtf8(response.toJson()));
-        //qDebug().noquote() << "5:1+::" + response.toJson(QJsonDocument::Compact);
-    }*/
 }
 
 void Chess24Websocket::sslErrors(const QList<QSslError> errors)
