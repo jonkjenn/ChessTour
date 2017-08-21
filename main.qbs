@@ -54,8 +54,6 @@ CppApplication {
         "rootitem.h",
         "round.cpp",
         "round.h",
-        "socketio.cpp",
-        "socketio.h",
         "tournament.cpp",
         "tournament.h",
         "tournamentsitem.cpp",
