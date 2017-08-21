@@ -16,22 +16,21 @@ public:
         Match
     };
 
-    TournamentsItem(TournamentsItem* parentItem = 0,ItemType type=Root);
-    TournamentsItem *child(int position) const;
-    int childCount() const;
-    virtual int columnCount() const{
-        return 0;
-    }
-    virtual QVariant data(int role) const{
-        return QVariant();
-    }
-    TournamentsItem* parentItem() const;
-    virtual ~TournamentsItem(){}
-    void addChild(TournamentsItem*);
-    ItemType tourType;
-private:
-    QVector<TournamentsItem*> childItems;
+    TournamentsItem(TournamentsItem* parentItem ,ItemType type);
+    virtual ~TournamentsItem() = default;
+
+    virtual TournamentsItem *child(int position) const = 0;
+    virtual int childCount() const = 0;
+    virtual int columnCount() const = 0;
+    virtual QVariant data(int role) const = 0;
+    virtual bool addChild(TournamentsItem*) = 0;
+    virtual int position(TournamentsItem*) = 0;
+    TournamentsItem* parentItem();
+    const ItemType tourType;
+protected:
     TournamentsItem *parent = nullptr;
 };
+
+
 
 #endif // TOURNAMENTSITEM_H
