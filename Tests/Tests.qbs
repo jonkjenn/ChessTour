@@ -8,6 +8,8 @@ Project{
         Depends { name: "Qt.quick" }
 
         cpp.includePaths: [".."]
+        cpp.cxxLanguageVersion: "c++17"
+        cpp.cxxStandardLibrary: "libstdc++"
 
         files: [
         "tst_chesstourtests.cpp",
@@ -23,6 +25,11 @@ Project{
             "../tournamentsitem.h",
             "../tournamentsmodel.cpp",
             "../tournamentsmodel.h",
+            "../chess24messages.h",
+            "../chess24messages.cpp",
+            "../rootitem.h",
+            "../rootitem.cpp"
+
         ]
 
     }
