@@ -66,14 +66,12 @@ void Chess24Websocket::onDisconnected()
 
 void Chess24Websocket::onTextReceived(QString message)
 {
-    qDebug() << "Got message: " << message;
-
     QStringList parts = message.split(":");
 
     bool ok;
     int messageType = parts[0].toInt(&ok);
     if(!ok){
-        qDebug() << "Error in parsing websocket message: " << message;
+        qDebug() << "Error in parsing websocket message: ";
         return;
     }
 
