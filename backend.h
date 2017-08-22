@@ -31,14 +31,14 @@ private:
     bool m_loggedIn = false;
     QString m_username;
     QString m_password;
-    QNetworkReply *reply;
+    QNetworkReply *reply = nullptr;
     QNetworkAccessManager qnam;
     Chess24 c24{this,qnam};
     Chess24Websocket c24ws;
     PrepareChess24WS prepc24;
     DiskNetworkCookieJar jar;
     UserData data;
-    TournamentsModel *tm;
+    TournamentsModel *tm = nullptr;
 
    signals:
     void loggedInChanged();
