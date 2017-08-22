@@ -30,28 +30,28 @@ ApplicationWindow {
             }
         }
     }
+    }
 
-
-    Rectangle{
-        width: 200
-        id: loginDialog
+    Dialog{
         visible: !backend.loggedin
-        anchors.centerIn: parent
+        id: loginWrapper
+    contentItem:Rectangle{
+        color: Material.background
+        implicitWidth: 300
+        implicitHeight: 150
+        id: loginDialog
 
         ColumnLayout{
-            /*Label{
-                text: "Username"
-            }*/
+            anchors.margins: 10
+            anchors.centerIn: loginDialog
             TextField{
+                textColor: Material.foreground
                 implicitWidth: 250
                 id: username
                 KeyNavigation.tab: password
                 //text: backend.username
                 focus: true
                 placeholderText: "Enter username/email"
-            }
-            Label{
-                text: "Password"
             }
 
             TextField{
@@ -69,7 +69,7 @@ ApplicationWindow {
                 }
                 Button{
                     text:"Cancel"
-                    onClicked: loginDialog.visible = false
+                    onClicked: loginWrapper.visible = false
                 }
             }
         }
@@ -79,6 +79,6 @@ ApplicationWindow {
                           }
 
     }
-
+    }
 
 }
