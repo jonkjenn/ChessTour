@@ -1,11 +1,13 @@
 #ifndef ROUNDVIEWMODEL_H
 #define ROUNDVIEWMODEL_H
 
+#include <QSortFilterProxyModel>
 
-class RoundViewModel
+
+class RoundViewModel:public QSortFilterProxyModel
 {
 public:
-    RoundViewModel();
+    RoundViewModel(QObject *);
 };
 
 #endif // ROUNDVIEWMODEL_H
