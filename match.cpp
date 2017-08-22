@@ -1,22 +1,16 @@
 #include "match.h"
 
-Match::Match(TournamentsItem *parent, QString result, QString white, QString black, int priority, QString position):
+Match::Match(TournamentsItem *parent, const Round &round, const Tournament &tournament):
     TournamentsItem(parent,ItemType::Match),
-    result(result),
-    deep(Evaluation()),
-    quick(Evaluation()),
-    white(white),
-    black(black),
-    priority(priority),
-    position(position)
-
+    round(round),
+    tournament(tournament)
 {
 
 }
 
-
 int Match::columnCount() const
 {
+    return 1;
 }
 
 QVariant Match::data(int role) const
@@ -66,12 +60,15 @@ QVariant Match::data(int role) const
 
 TournamentsItem *Match::child(int position) const
 {
+    return nullptr;
 }
 
 int Match::childCount() const
 {
+    return 0;
 }
 
 bool Match::addChild(TournamentsItem *)
 {
+    return false;
 }

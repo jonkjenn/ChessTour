@@ -5,24 +5,44 @@
 #include <QString>
 #include "tournamentsitem.h"
 #include "evaluation.h"
+#include "tournament.h"
+#include "round.h"
 
 class Match: public TournamentsItem
 {
 public:
-    Match(TournamentsItem *parent, QString result = "*",QString white = "White",QString black = "Black", int priority = 1, QString position = "");
+    Match(TournamentsItem *parent,const Round &, const Tournament &);
 
-    QString result;
+    QString resultWhite;
+    QString resultBlack;
+
     Evaluation deep;
     Evaluation quick;
+
     QString white;
+    QString whiteFide;
     QString black;
+    QString blackFide;
+
     int priority;
     QString position;
+    QString fullGameRKey;
 
-    enum MatchRoles{
+    QString currentFEN;
+    QString earlierFEN;
+    QStringList lastMoves;
+
+    QString engine;
+
+    const Round &round;
+    const Tournament &tournament;
+
+    enum class MatchRoles{
         ResultRole = Qt::UserRole +1,
         WhiteRole,
         BlackRole,
+        WhiteFideRole,
+        BlackFideRole,
         PriorityRole,
         PositionRole,
 
