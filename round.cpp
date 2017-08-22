@@ -12,6 +12,8 @@ QVariant Round::data(int role) const
         return number;
     case RoundRoles::DateRole:
         return date;
+    case RoundRoles::DescriptionRole:
+        return description;
     }
 
     return QVariant();
@@ -20,12 +22,15 @@ QVariant Round::data(int role) const
 
 TournamentsItem *Round::child(int position) const
 {
+    return matches.at(position);
 }
 
 int Round::childCount() const
 {
+    return matches.size();
 }
 
-bool Round::addChild(TournamentsItem *)
+bool Round::addChild(Match *match)
 {
+    matches.append(match);
 }

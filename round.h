@@ -10,10 +10,12 @@ public:
     Round(TournamentsItem *parent);
     int number;
     QString date;
+    QString description;
 
     enum RoundRoles{
         NumberRole = Qt::UserRole +1,
-        DateRole
+        DateRole,
+        DescriptionRole
     };
 
     // TournamentsItem interface
@@ -23,7 +25,10 @@ public:
 public:
     TournamentsItem *child(int position) const override;
     int childCount() const override;
-    bool addChild(TournamentsItem *) override;
+    bool addChild(Match *);
+
+private:
+    QVector<Match*> matches;
 };
 
 #endif // ROUND_H
