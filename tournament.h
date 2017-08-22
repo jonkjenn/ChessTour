@@ -26,6 +26,8 @@ public:
     bool addChild(TournamentsItem *) override;
     int position(TournamentsItem *) override;
 
+    QHash<int,QString> players;
+
 private:
     QVector<Round*> rounds;
 
