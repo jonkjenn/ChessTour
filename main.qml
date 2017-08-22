@@ -7,18 +7,20 @@ import QtQuick.Controls.Material 2.2
 
 ApplicationWindow {
     visible: true
-    width: 640
-    height: 480
     title: qsTr("Chess tournament viewer")
     objectName: "appWindow"
 
+    RowLayout{
+        implicitWidth: 1024
+        implicitHeight: 512
     ColumnLayout{
+            Layout.fillHeight: true
+            implicitWidth: 150
         Text{text: "TournamentView"}
         TreeView{
             id: tournametView
             model: tournamentModel
-            width: 300
-            height: 400
+            Layout.fillHeight: true
             TableViewColumn {
                 title: "Name"
                 role: "name"
