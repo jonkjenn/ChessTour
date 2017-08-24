@@ -15,17 +15,23 @@ int Match::columnCount() const
 
 QVariant Match::data(int role) const
 {
-    switch(role){
+    switch(static_cast<MatchRoles>(role)){
     case MatchRoles::BlackRole:
         return black;
     case MatchRoles::WhiteRole:
         return white;
+    case MatchRoles::BlackFideRole:
+        return blackFide;
+    case MatchRoles::WhiteFideRole:
+        return whiteFide;
     case MatchRoles::PositionRole:
         return position;
     case MatchRoles::PriorityRole:
         return priority;
-    case MatchRoles::ResultRole:
-        return result;
+    case MatchRoles::ResultWhiteRole:
+        return resultWhite;
+    case MatchRoles::ResultBlackRole:
+        return resultBlack;
 
     case MatchRoles::DeepChangeRole:
         return deep.change;
@@ -55,12 +61,6 @@ QVariant Match::data(int role) const
     }
 
     return QVariant();
-}
-
-
-TournamentsItem *Match::child(int position) const
-{
-    return nullptr;
 }
 
 int Match::childCount() const

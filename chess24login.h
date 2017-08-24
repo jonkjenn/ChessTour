@@ -3,54 +3,62 @@
 
 #include <QObject>
 #include <QQmlEngine>
-#include <QtNetwork>
 
 #include "chess24.h"
 #include "chess24websocket.h"
 #include "preparechess24ws.h"
-#include "disknetworkcookiejar.h"
+#include "message.h"
+
 
 //Forward
 class TournamentsModel;
+class QNetworkAccessManager;
+class DiskNetworkCookieJar;
 
-class Backend:public QObject
+class Chess24Login:public QObject
 {
     Q_OBJECT
     Q_PROPERTY(bool loggedin READ loggedIn NOTIFY loggedInChanged)
     Q_PROPERTY(QString username READ username WRITE setUsername NOTIFY usernameChanged)
     Q_PROPERTY(QString password READ password WRITE setPassword NOTIFY passwordChanged)
 public:
-    bool loggedIn();
+    Chess24Login(QObject *parent,
+                 const TournamentsModel &tm,
+                 const QNetworkAccessManager &qnam,
+                 Chess24 &c24);
+    //QML properties
     QString username();
     QString password();
+    bool loggedIn() const;
     void setUsername(QString);
     void setPassword(QString);
-    Backend(QObject *parent, TournamentsModel *tm);
+    UserData userData() const;
+
+
+    void start();
 private:
     void setLoggedIn(bool);
     bool m_loggedIn = false;
     QString m_username;
     QString m_password;
-    QNetworkReply *reply = nullptr;
-    QNetworkAccessManager qnam;
-    Chess24 c24{this,qnam};
-    Chess24Websocket c24ws;
-    PrepareChess24WS prepc24;
-    DiskNetworkCookieJar jar;
-    UserData data;
-    TournamentsModel *tm = nullptr;
+    UserData m_userData;
+    const TournamentsModel &tm;
+    const QNetworkAccessManager &qnam;
+    Chess24 &c24;
 
    signals:
-    void loggedInChanged();
+    //Signals to UI
     void usernameChanged();
     void passwordChanged();
+    void loggedInChanged();
+
+    //Signals
+    void result(UserData);
 
 public slots:
     void loginResult(UserData data);
     void login(QString username, QString password);
-private slots:
-    void httpFinished();
-    void loginAccepted();
+    //void handleMessage(Message);
 };
 
 #endif // BACKEND_H

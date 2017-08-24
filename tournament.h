@@ -21,6 +21,7 @@ public:
     // TournamentsItem interface
     int columnCount() const override;
     QVariant data(int role) const override;
+    QVariant data(Tournament::TournamentRoles role) const;
     TournamentsItem *child(int position) const override;
     int childCount() const override;
     bool addChild(TournamentsItem *) override;

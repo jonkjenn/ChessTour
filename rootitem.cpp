@@ -6,6 +6,9 @@ RootItem::RootItem(TournamentsItem *parent):
 
 }
 
+const Tournament* RootItem::tournamentChild(int position){
+    return children.at(position);
+}
 
 TournamentsItem *RootItem::child(int position) const
 {
@@ -26,7 +29,6 @@ QVariant RootItem::data(int role) const
 {
     return QVariant();
 }
-
 
 bool RootItem::addChild(TournamentsItem *item)
 {

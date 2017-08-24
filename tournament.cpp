@@ -12,7 +12,12 @@ int Tournament::columnCount() const
 
 QVariant Tournament::data(int role) const
 {
-    switch(static_cast<TournamentRoles>(role)){
+    return data(static_cast<TournamentRoles>(role));
+}
+
+QVariant Tournament::data(Tournament::TournamentRoles role) const
+{
+    switch(role){
         case TournamentRoles::NameRole:
             return this->name;
     case TournamentRoles::OriginalOrderRole:

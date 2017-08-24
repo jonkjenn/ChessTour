@@ -30,10 +30,11 @@ private:
     void httpFinished(QNetworkReply *, QString username, QString password);
     static std::optional<QString> getCSRF(QString source);
     static UserData getUserData(const QByteArray &data);
+    void downloadUserData(UserData::LoginSource login = UserData::LoginSource::COOKIE);
 public:
     Chess24(QObject *parent,QNetworkAccessManager &);
     void login(QString username, QString password);
-    void downloadUserData(UserData::LoginSource login = UserData::LoginSource::COOKIE);
+    void checkLoggedIn(UserData::LoginSource source);
 private slots:
     void redirected(const QUrl &);
     void gotError(QNetworkReply::NetworkError);

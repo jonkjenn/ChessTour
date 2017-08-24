@@ -13,52 +13,53 @@
 #include "wsrequest.h"
 #include "chess24.h"
 
+class PrepareChess24WS;
+class Chess24Login;
+
 class QNetworkAccessManager;
 class QNetworkReply;
+class Message;
 
 class Chess24Websocket: public QObject
 {
     Q_OBJECT
 public:
-    Chess24Websocket(QObject *,QNetworkAccessManager &);
-    void connectWS(UserData data, QString notificationServer, QString wssId);
+    Chess24Websocket(QObject *,const QNetworkAccessManager &,const Chess24Login &, PrepareChess24WS &);
+    void connectWS(QString notificationServer, QString wssId);
     bool isConnected();
 
-    WSRequest *getTournamentIds();
-
-
-     enum MessageType{
-        disconnect = 0,
-        connect = 1,
-        heartbeat = 2,
-        message = 3,
-        json = 4,
-        event = 5,
-        ack = 6,
-        error = 7,
-        noop = 8
-    };
-
-     enum ErrorReason{
+     enum class ErrorReason{
          transport_not_supported = 0,
          client_not_handshaken = 1,
          unauthorized = 2
      };
 
-     enum ErrorAdvice{
+     enum class ErrorAdvice{
              reconnect = 0
      };
 
+     void handleMessage(Message msg);
+
+     int messageId();
+     WSRequest *sendMessage(QString msg, int messageId);
+     void sendMessage(QString msg);
+
 signals:
      void connected();
+     void messageReceived(QString);
+public slots:
+     void onLoggedInChanged();
+
 private:
-    QNetworkAccessManager &qnam;
+    const QNetworkAccessManager &qnam;
     UserData userData;
     QMap<int,WSRequest*> requests;
-    WSRequest* createRequest(QString msg);
+
+    const Chess24Login &chess24Login;
+    PrepareChess24WS &prepWS;
 
     QWebSocket ws;
-    int message_id = 1;
+    int m_messageId = 1;
 
     bool m_isConnected = false;
     void setIsConnected(bool);

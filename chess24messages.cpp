@@ -17,8 +17,6 @@ QString idHeader(int messageId){
     return "5:" + QString::number(messageId) + "+::";
 }
 
-
-
 int findDataStart(QString msg)
 {
 
@@ -92,9 +90,6 @@ QVariantList tournamentNamesFromJSON(QString data)
     QJsonArray arr = wrapper[0].toArray();
     return arr.toVariantList();
 }
-
-
-
 
 
 }

@@ -19,6 +19,11 @@ void Chess24::login(QString username, QString password)
     //connect(&qnam,&QNetworkAccessManager::sslErrors,this,&Chess24::sslErrors);
 }
 
+void Chess24::checkLoggedIn(UserData::LoginSource source)
+{
+    downloadUserData(source);
+}
+
 void Chess24::httpFinished(QNetworkReply *reply, QString username, QString password)
 {
     QByteArray data = reply->readAll();
@@ -50,9 +55,10 @@ void Chess24::httpFinished(QNetworkReply *reply, QString username, QString passw
 
     //Send login post
     QNetworkReply * rep = qnam.post(req,qu.query(QUrl::FullyEncoded).toUtf8());
-    connect(rep,&QNetworkReply::finished,[this](){
+    connect(rep,&QNetworkReply::finished,[this,rep](){
         //Check if logged in by using this api call
         downloadUserData(UserData::LoginSource::USERPASS);
+        rep->deleteLater();
     });
     connect(rep,&QNetworkReply::redirected,this,&Chess24::redirected);
     connect(rep,static_cast<void(QNetworkReply::*)(QNetworkReply::NetworkError)>(&QNetworkReply::error),this,&Chess24::gotError);
@@ -68,9 +74,9 @@ void Chess24::downloadUserData(UserData::LoginSource source){
             UserData udat = getUserData(data);
             udat.loginSource = source;
             emit loginResult(udat);
+            urep->deleteLater();
         });
 }
-
 
 UserData Chess24::getUserData(const QByteArray &data){
     UserData d;

@@ -10,7 +10,9 @@ namespace Chess24Messages
     QString subscribeWebTournament(QString name);
     QString subscribeBroadcastChessGame(QString name);
     QString getBroadcastChessGame(int,QString name);
+    QString getWebTournament(int messageId, QString name);
     QVariantList tournamentNamesFromJSON(QString data);
+
 
     namespace Helpers{
         const QString model_webTournament = "model:webTournamentRedisAR:";

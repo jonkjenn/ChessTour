@@ -5,8 +5,9 @@
 #include <QString>
 #include "tournamentsitem.h"
 #include "evaluation.h"
-#include "tournament.h"
-#include "round.h"
+
+class Round;
+class Tournament;
 
 class Match: public TournamentsItem
 {
@@ -20,9 +21,9 @@ public:
     Evaluation quick;
 
     QString white;
-    QString whiteFide;
+    int whiteFide;
     QString black;
-    QString blackFide;
+    int blackFide;
 
     int priority;
     QString position;
@@ -38,7 +39,8 @@ public:
     const Tournament &tournament;
 
     enum class MatchRoles{
-        ResultRole = Qt::UserRole +1,
+        ResultWhiteRole = Qt::UserRole +1,
+        ResultBlackRole,
         WhiteRole,
         BlackRole,
         WhiteFideRole,
@@ -68,7 +70,7 @@ public:
 
     // TournamentsItem interface
 public:
-    TournamentsItem *child(int position) const override;
+    //TournamentsItem *child(int position)
     int childCount() const override;
     bool addChild(TournamentsItem *) override;
 };

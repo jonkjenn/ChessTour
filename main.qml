@@ -16,11 +16,13 @@ ApplicationWindow {
     ColumnLayout{
             Layout.fillHeight: true
             implicitWidth: 150
-        Text{text: "TournamentView"}
+        Text{ id: tournamentHeader;text: "TournamentView"}
         TreeView{
-            id: tournametView
-            model: tournamentModel
+            id: tournamentsList
+            model: tournamentsModel
             Layout.fillHeight: true
+            selectionMode: SelectionMode.SingleSelection
+
             TableViewColumn {
                 title: "Name"
                 role: "name"
@@ -30,10 +32,47 @@ ApplicationWindow {
             }
         }
     }
+    ColumnLayout{
+        Layout.fillWidth: true
+        implicitWidth: 1024
+        property var currentIndex
+        id:tournamentView
+        TreeView{
+            id: roundsView
+            model: roundsModel
+            rootIndex: roundsModel.mapFromSource(tournamentsModel.mapToSource(tournamentsList.currentIndex))
+            visible:tournamentsList.currentIndex.valid
+
+            TableViewColumn {
+                title: "Round"
+                role: "number"
+            }
+            TableViewColumn {
+                title: "Date"
+                role: "date"
+            }
+        }
+        TreeView{
+            id: matchesView
+            model: matchesModel
+            rootIndex: matchesModel.mapFromSource(roundsModel.mapToSource(roundsView.currentIndex))
+            visible:roundsView.currentIndex.valid
+
+            TableViewColumn{
+                title:"White"
+                role:"whiteRole"
+            }
+
+            TableViewColumn{
+                title:"Black"
+                role:"blackRole"
+            }
+        }
+    }
     }
 
     Dialog{
-        visible: !backend.loggedin
+        visible: !chess24Login.loggedin
         id: loginWrapper
     contentItem:Rectangle{
         color: Material.background
@@ -49,7 +88,6 @@ ApplicationWindow {
                 implicitWidth: 250
                 id: username
                 KeyNavigation.tab: password
-                //text: backend.username
                 focus: true
                 placeholderText: "Enter username/email"
             }
@@ -59,13 +97,12 @@ ApplicationWindow {
                 id: password
                 echoMode: TextField.PasswordEchoOnEdit | null
                 KeyNavigation.tab: username
-                //text: backend.password
                 placeholderText: "Enter password"
             }
             RowLayout{
                 Button{
                     text: "Login"
-                    onClicked:backend.login(username.text,password.text)
+                    onClicked:chess24Login.login(username.text,password.text)
                 }
                 Button{
                     text:"Cancel"

@@ -11,7 +11,8 @@ RoundViewModel::RoundViewModel(QObject *parent):
 QHash<int, QByteArray> RoundViewModel::roleNames() const
 {
     QHash<int,QByteArray> roles;
-    roles.insert(Round::RoundRoles::NumberRole,"number");
-    roles.insert(Round::RoundRoles::DateRole,"date");
-    roles.insert(Round::RoundRoles::DescriptionRole,"description");
+    roles.insert(static_cast<int>(Round::RoundRoles::NumberRole),"number");
+    roles.insert(static_cast<int>(Round::RoundRoles::DateRole),"date");
+    roles.insert(static_cast<int>(Round::RoundRoles::DescriptionRole),"description");
+    return roles;
 }

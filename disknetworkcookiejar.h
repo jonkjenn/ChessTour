@@ -5,12 +5,12 @@
 class DiskNetworkCookieJar:public QNetworkCookieJar
 {
 public:
-    DiskNetworkCookieJar();
+    DiskNetworkCookieJar(QObject *);
 
     // QNetworkCookieJar interface
 public:
-    static void loadCookieJar(QNetworkCookieJar &jar);
     void saveCookieJar();
+    QList<QNetworkCookie> loadCookies();
 };
 
 #endif // DISKNETWORKCOOKIEJAR_H

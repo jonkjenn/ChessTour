@@ -16,12 +16,14 @@ void PrepareChess24WS::start()
     //Callback when the http request returns
     connect(reply,&QNetworkReply::finished,[reply,this]{
         this->notificationRespons(reply);
+        reply->deleteLater();
     });
 
     //Callback if the http request gets error
     connect(reply, static_cast<void(QNetworkReply::*)(QNetworkReply::NetworkError)>(&QNetworkReply::error),
             [reply,this]{
         emit this->failure(reply->errorString());
+        reply->deleteLater();
     }
     );
 }

@@ -21,6 +21,7 @@ public:
     int getPosition(QString key) const;
     bool addChildren(QVector<Tournament *> newChildren);
     int position(TournamentsItem *) override;
+    const Tournament* tournamentChild(int position);
 private:
     //QMap<QString,Tournament*> children;
     QVector<Tournament*> children;

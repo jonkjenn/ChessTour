@@ -7,7 +7,7 @@ Round::Round(TournamentsItem *parent):TournamentsItem(parent,ItemType::Round)
 
 QVariant Round::data(int role) const
 {
-    switch(role){
+    switch(static_cast<RoundRoles>(role)){
     case RoundRoles::NumberRole:
         return number;
     case RoundRoles::DateRole:
@@ -22,7 +22,7 @@ QVariant Round::data(int role) const
 
 TournamentsItem *Round::child(int position) const
 {
-    return matches.at(position);
+    return static_cast<TournamentsItem*>(matches.at(position));
 }
 
 int Round::childCount() const

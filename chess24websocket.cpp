@@ -6,21 +6,26 @@
 #include <QJsonArray>
 
 #include "chess24messages.h"
+#include "chess24login.h"
+#include "preparechess24ws.h"
 
 
-Chess24Websocket::Chess24Websocket(QObject *parent,QNetworkAccessManager &qnam):
-    QObject (parent),qnam(qnam)
+Chess24Websocket::Chess24Websocket(QObject *parent, const QNetworkAccessManager &qnam, const Chess24Login &chess24Login, PrepareChess24WS &prepWS):
+    QObject (parent),qnam(qnam), prepWS(prepWS), chess24Login(chess24Login)
 {
-    QObject::connect(&ws,&QWebSocket::connected,this,&Chess24Websocket::onConnected);
-    QObject::connect(&ws,&QWebSocket::disconnected,this,&Chess24Websocket::onDisconnected);
-    QObject::connect(&ws,&QWebSocket::sslErrors,this,&Chess24Websocket::sslErrors);
-    QObject::connect(&ws,&QWebSocket::binaryMessageReceived,this,&Chess24Websocket::binaryMessageReceived);
-    QObject::connect(&ws,static_cast<void(QWebSocket::*)(QAbstractSocket::SocketError)>(&QWebSocket::error),this,&Chess24Websocket::socketError);
-    QObject::connect(&ws,&QWebSocket::textMessageReceived,this,&Chess24Websocket::onTextReceived);
+    connect(&ws,&QWebSocket::connected,this,&Chess24Websocket::onConnected);
+    connect(&ws,&QWebSocket::disconnected,this,&Chess24Websocket::onDisconnected);
+    connect(&ws,&QWebSocket::sslErrors,this,&Chess24Websocket::sslErrors);
+    connect(&ws,&QWebSocket::binaryMessageReceived,this,&Chess24Websocket::binaryMessageReceived);
+    connect(&ws,static_cast<void(QWebSocket::*)(QAbstractSocket::SocketError)>(&QWebSocket::error),this,&Chess24Websocket::socketError);
+    connect(&ws,&QWebSocket::textMessageReceived,this,&Chess24Websocket::onTextReceived);
+
+
+    connect(&prepWS,&PrepareChess24WS::success,this,&Chess24Websocket::connectWS);
 }
 
-void Chess24Websocket::connectWS(UserData data,QString notificationServer,QString wssId){
-    userData = data;
+
+void Chess24Websocket::connectWS(QString notificationServer,QString wssId){
     ws.open(QUrl("wss://" + notificationServer + "/socket.io/1/websocket/" + wssId + "/"));
 }
 
@@ -29,22 +34,33 @@ bool Chess24Websocket::isConnected()
     return m_isConnected;
 }
 
-WSRequest *Chess24Websocket::getTournamentIds()
+/*WSRequest *Chess24Websocket::getTournamentIds()
 {
-   return createRequest(Chess24Messages::getTouramentIds(message_id));
+    return sendMessage(Chess24Messages::getTouramentIds(m_messageId));
+}*/
+
+void Chess24Websocket::onLoggedInChanged()
+{
+    if(chess24Login.loggedIn()){
+        userData = chess24Login.userData();
+        prepWS.start();
+    }
 }
 
-WSRequest* Chess24Websocket::createRequest(QString msg)
+WSRequest* Chess24Websocket::sendMessage(QString msg, int messageId)
 {
-    QMap<int,WSRequest*>::iterator it = requests.insert(message_id,new WSRequest(message_id,this));
+    QMap<int,WSRequest*>::iterator it = requests.insert(messageId,new WSRequest(messageId,this));
 
     qDebug() << "Sending message: " << msg;
 
     ws.sendTextMessage(msg);
 
-    message_id+= 1;
-
     return it.value();
+}
+
+void Chess24Websocket::sendMessage(QString msg)
+{
+    ws.sendTextMessage(msg);
 }
 
 void Chess24Websocket::setIsConnected(bool val)
@@ -66,54 +82,7 @@ void Chess24Websocket::onDisconnected()
 
 void Chess24Websocket::onTextReceived(QString message)
 {
-    QStringList parts = message.split(":");
-
-    bool ok;
-    int messageType = parts[0].toInt(&ok);
-    if(!ok){
-        qDebug() << "Error in parsing websocket message: ";
-        return;
-    }
-
-    switch(messageType){
-    case(MessageType::disconnect):
-        break;
-    case(MessageType::connect):
-    {
-        WSRequest *req = createRequest(Chess24Messages::connect(userData,message_id));
-        QObject::connect(req,&WSRequest::finished,[this](){
-            emit connected();
-        });
-        return;
-    }
-    case(MessageType::heartbeat):
-        ws.sendTextMessage(message);
-        return;
-    case(MessageType::message):
-        break;
-    case(MessageType::json):
-        break;
-    case(MessageType::event):
-        break;
-    case(MessageType::ack):
-    {
-        //Id to the left of "+" and data to the right
-        QStringList ackParts = parts[3].split("+");
-        if(ackParts.length() != 2){return;}
-        bool ok = false;
-        int id = ackParts[0].toInt(&ok);//Get the message id
-        if(!ok){return;}
-        requests[id]->data(ackParts[1]);
-        requests.remove(id);
-        return;
-    }
-    case(MessageType::error):
-        break;
-    case(MessageType::noop):
-        break;
-    }
-
-
+    emit messageReceived(message);
 }
 
 void Chess24Websocket::sslErrors(const QList<QSslError> errors)
@@ -132,4 +101,41 @@ void Chess24Websocket::socketError(QAbstractSocket::SocketError error)
 {
 
     qDebug() << error;
+}
+
+//Messages from messageparser
+void Chess24Websocket::handleMessage(Message msg){
+    switch(msg.type){
+
+    case(Message::MessageType::connect):
+    {
+
+        int id = messageId();
+        WSRequest *req = sendMessage(Chess24Messages::connect(userData,id),id);
+        QObject::connect(req,&WSRequest::finished,[this](){
+            emit connected();
+        });
+        return;
+    }
+    case(Message::MessageType::heartbeat):
+    {
+        qDebug() << "Sendt heartbeat";
+        sendMessage(msg.data,messageId());//Heartbeat is same message in return
+        return;
+    }
+    case(Message::MessageType::ack):
+    {
+        requests[msg.id]->data(msg.data);
+        requests.remove(msg.id);
+        return;
+    }
+    default:
+        return;
+    }
+}
+
+int Chess24Websocket::messageId()
+{
+    m_messageId +=1;
+    return m_messageId;
 }

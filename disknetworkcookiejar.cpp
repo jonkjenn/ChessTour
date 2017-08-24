@@ -5,9 +5,13 @@
 
 using namespace std;
 
-DiskNetworkCookieJar::DiskNetworkCookieJar()
+DiskNetworkCookieJar::DiskNetworkCookieJar(QObject *parent):
+    QNetworkCookieJar(parent)
 {
-
+    QList<QNetworkCookie> cookies = loadCookies();
+    for(auto c:cookies){
+        insertCookie(c);
+    }
 }
 
 void DiskNetworkCookieJar::saveCookieJar(){
@@ -24,18 +28,18 @@ void DiskNetworkCookieJar::saveCookieJar(){
     file.close();
 }
 
-void DiskNetworkCookieJar::loadCookieJar(QNetworkCookieJar &jar){
+
+QList<QNetworkCookie> DiskNetworkCookieJar::loadCookies(){
     ifstream file;
     file.open("cookies.jar");
     //TODO:: error handling
     string line;
+    QList<QNetworkCookie> cookies;
     while(getline(file,line)){
 
         //Empty if parsing error
-        QList<QNetworkCookie> cookies = QNetworkCookie::parseCookies(QByteArray::fromStdString(line));
-        for(auto c:cookies){
-            jar.insertCookie(c);
-        }
+        cookies.append(QNetworkCookie::parseCookies(QByteArray::fromStdString(line)));
     }
     file.close();
+    return cookies;
 }

@@ -147,7 +147,7 @@ bool TournamentsModel::addTournaments(QVariantList names)
     //Create index to avoid duplicates
     QHash<QString,int> nameMap;
     for(int i=0;i<root->childCount();++i){
-        nameMap.insert(root->child(i)->data(static_cast<int>(Tournament::TournamentRoles::NameRole)).toString(),i);
+        nameMap.insert(root->tournamentChild(i)->data(Tournament::TournamentRoles::NameRole).toString(),i);
     }
 
     QVector<Tournament*> tournaments;
@@ -166,3 +166,9 @@ bool TournamentsModel::addTournaments(QVariantList names)
 
     return true;
 }
+
+bool TournamentsModel::updateTournamentDetails(QJsonObject details)
+{
+
+}
+

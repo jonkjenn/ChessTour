@@ -12,7 +12,7 @@ public:
     QString date;
     QString description;
 
-    enum RoundRoles{
+    enum class RoundRoles{
         NumberRole = Qt::UserRole +1,
         DateRole,
         DescriptionRole
