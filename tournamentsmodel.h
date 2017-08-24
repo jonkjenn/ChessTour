@@ -35,7 +35,8 @@ public:
     bool addChild(const QModelIndex &parent,TournamentsItem *);
     bool addTournament(QString name, int originalOrder);
     bool addTournaments(QVariantList names);
-    bool updateTournamentDetails(QJsonObject details);
+    void updateTournamentDetails(QJsonObject json);
+    void onCurrentTournamentChanged(QModelIndex index);
 };
 
 #endif // TOURNAMENTSMODEL_H

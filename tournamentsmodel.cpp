@@ -168,8 +168,21 @@ bool TournamentsModel::addTournaments(QVariantList names)
     return true;
 }
 
-bool TournamentsModel::updateTournamentDetails(QJsonObject details)
+void TournamentsModel::onCurrentTournamentChanged(QModelIndex index)
 {
+    if(rootItemObject.childCount()>index.row()){
+        const Tournament *t = rootItemObject.tournamentChild(index.row());
+        if(t->childCount() > 0){//We only update the tournament from current tournament changed once to avoid spam, otherwise use some refresh button TODO: refresh button
+            return;
+        }
 
+        qDebug() << "Getting tournament details for tournament " << t->name;
+
+        c24Manager.getTournament(t->name);//Assumes we're already connected to the signal for receiving result
+    }
+}
+
+void TournamentsModel::updateTournamentDetails(QJsonObject json)
+{
 }
 
