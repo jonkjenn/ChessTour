@@ -19,7 +19,6 @@ QString idHeader(int messageId){
 
 int findDataStart(QString msg)
 {
-
     int i1 = msg.indexOf(":");
     if(i1<0){return -1;}
     int i2 = msg.indexOf(":",i1+1);
@@ -48,6 +47,10 @@ QString buildData(QString name, QVariantList args)
 }
 
 using namespace Helpers;
+
+QString heartBeat(){
+    return "2::";
+}
 
 QString connect(UserData data, int messageId)
 {

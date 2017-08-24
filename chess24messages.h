@@ -12,6 +12,7 @@ namespace Chess24Messages
     QString getBroadcastChessGame(int,QString name);
     QString getWebTournament(int messageId, QString name);
     QVariantList tournamentNamesFromJSON(QString data);
+    QString heartBeat();
 
 
     namespace Helpers{
