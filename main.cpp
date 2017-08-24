@@ -40,7 +40,7 @@ int main(int argc, char *argv[])
 
     Chess24MessageParser *parser = new Chess24MessageParser(&app);
 
-    Chess24Login *chess24Login = new Chess24Login(&app,*tm,*qnam, *chess24);
+    Chess24Login *chess24Login = new Chess24Login(&app,*qnam, *chess24);
 
     PrepareChess24WS *prepc24ws = new PrepareChess24WS(&app,*qnam);
     Chess24Websocket *c24ws = new Chess24Websocket(&app,*qnam,*chess24Login,*prepc24ws);
