@@ -63,6 +63,7 @@ int main(int argc, char *argv[])
 
     //Asumes that everytime someone calls Chess24Manager.getTournaments we want to update the model
     QObject::connect(c24Manager,&Chess24Manager::gotTournaments,tm,&TournamentsModel::addTournaments);
+    QObject::connect(c24Manager,&Chess24Manager::gotTournamentDetails,tm,&TournamentsModel::updateTournamentDetails);
 
     //One shot retrieval of data on first start, not particularly elegant
     QMetaObject::Connection onConnectedCon = QObject::connect(c24ws, &Chess24Websocket::connected,[&onConnectedCon,c24Manager](){//When websocket is connected
