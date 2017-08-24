@@ -2,16 +2,18 @@
 #define TOURNAMENTSMODEL_H
 
 #include <QAbstractItemModel>
+
 #include "tournamentsitem.h"
 #include "tournament.h"
 #include "rootitem.h"
 
+class Chess24Manager;
 
 class TournamentsModel : public QAbstractItemModel
 {
     Q_OBJECT
 public:
-    explicit TournamentsModel(QObject *parent=0);
+    explicit TournamentsModel(QObject *parent, Chess24Manager &);
     ~TournamentsModel();
 
     // QAbstractItemModel interface
@@ -27,6 +29,7 @@ public:
     void httpFinished();
     TournamentsItem *rootItem = nullptr;
     RootItem rootItemObject{nullptr};
+    Chess24Manager &c24Manager;
 
 
     bool addChild(const QModelIndex &parent,TournamentsItem *);

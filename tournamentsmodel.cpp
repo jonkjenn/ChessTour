@@ -5,8 +5,9 @@
 
 #include "tournament.h"
 #include "tournamentsitem.h"
+#include "chess24manager.h"
 
-TournamentsModel::TournamentsModel(QObject *parent):QAbstractItemModel(parent)
+TournamentsModel::TournamentsModel(QObject *parent, Chess24Manager &c24Manager):QAbstractItemModel(parent), c24Manager(c24Manager)
 {
     rootItem = static_cast<TournamentsItem*>(&rootItemObject);
 }
