@@ -25,10 +25,9 @@
 
 
 Chess24Login::Chess24Login(QObject *parent,
-                         const TournamentsModel &tm,
                          const QNetworkAccessManager &qnam,
                          Chess24 &c24):
-    QObject(parent), tm(tm), qnam(qnam), c24(c24)
+    QObject(parent), qnam(qnam), c24(c24)
 {
 }
 

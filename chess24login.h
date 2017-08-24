@@ -23,7 +23,6 @@ class Chess24Login:public QObject
     Q_PROPERTY(QString password READ password WRITE setPassword NOTIFY passwordChanged)
 public:
     Chess24Login(QObject *parent,
-                 const TournamentsModel &tm,
                  const QNetworkAccessManager &qnam,
                  Chess24 &c24);
     //QML properties
@@ -42,7 +41,6 @@ private:
     QString m_username;
     QString m_password;
     UserData m_userData;
-    const TournamentsModel &tm;
     const QNetworkAccessManager &qnam;
     Chess24 &c24;
 
