@@ -120,7 +120,7 @@ void Chess24Websocket::handleMessage(Message msg){
     case(Message::MessageType::heartbeat):
     {
         qDebug() << "Sendt heartbeat";
-        sendMessage(msg.data,messageId());//Heartbeat is same message in return
+        sendMessage(Chess24Messages::heartBeat());
         return;
     }
     case(Message::MessageType::ack):
