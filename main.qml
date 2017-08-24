@@ -43,7 +43,7 @@ ApplicationWindow {
         TreeView{
             id: roundsView
             model: roundsModel
-            rootIndex: roundsModel.mapFromSource(tournamentsModel.mapToSource(tournamentsList.currentIndex))
+            rootIndex: roundsModel.mapFromSource(tournamentViewModel.mapToSource(tournamentsList.currentIndex))
             visible:tournamentsList.currentIndex.valid
 
             TableViewColumn {
