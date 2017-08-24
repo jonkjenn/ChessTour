@@ -5,7 +5,7 @@
 #include "tournamentviewmodel.h"
 
 //PGN reader
-#include "PGNGameCollection.h"
+//#include "PGNGameCollection.h"
 #include <sstream>
 #include <iostream>
 
