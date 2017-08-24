@@ -110,7 +110,7 @@ void Chess24Websocket::handleMessage(Message msg){
     case(Message::MessageType::connect):
     {
 
-        int id = messageId();
+        int id = increaseAndGetMessageId();
         WSRequest *req = sendMessage(Chess24Messages::connect(userData,id),id);
         QObject::connect(req,&WSRequest::finished,[this](){
             emit connected();
@@ -134,8 +134,12 @@ void Chess24Websocket::handleMessage(Message msg){
     }
 }
 
+int Chess24Websocket::increaseAndGetMessageId(){
+    m_messageId +=1;
+    return m_messageId;
+}
+
 int Chess24Websocket::messageId()
 {
-    m_messageId +=1;
     return m_messageId;
 }

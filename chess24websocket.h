@@ -40,10 +40,10 @@ public:
 
      void handleMessage(Message msg);
 
-     int messageId();
      WSRequest *sendMessage(QString msg, int messageId);
      void sendMessage(QString msg);
 
+     int increaseAndGetMessageId();
 signals:
      void connected();
      void messageReceived(QString);
@@ -51,6 +51,7 @@ public slots:
      void onLoggedInChanged();
 
 private:
+    int messageId();
     const QNetworkAccessManager &qnam;
     UserData userData;
     QMap<int,WSRequest*> requests;

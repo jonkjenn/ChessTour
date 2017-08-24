@@ -17,13 +17,13 @@ Chess24Manager::Chess24Manager(QObject *parent, Chess24Websocket &c24ws):
 
 WSRequest *Chess24Manager::sendMessage(std::function<QString(int)> msgFunc){
 
-    int id = c24ws.messageId();
+    int id = c24ws.increaseAndGetMessageId();
     return c24ws.sendMessage(msgFunc(id),id);
 }
 
 WSRequest *Chess24Manager::sendMessage(std::function<QString(int,QString)> msgFunc,QString msgData){
 
-    int id = c24ws.messageId();
+    int id = c24ws.increaseAndGetMessageId();
     return c24ws.sendMessage(msgFunc(id,msgData),id);
 }
 
