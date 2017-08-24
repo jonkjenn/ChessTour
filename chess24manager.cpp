@@ -6,6 +6,7 @@
 #include "tournamentsitem.h"
 
 #include <QJsonDocument>
+#include <QJsonArray>
 
 Chess24Manager::Chess24Manager(QObject *parent, Chess24Websocket &c24ws):
     QObject(parent),
@@ -44,6 +45,8 @@ void Chess24Manager::subscribeTournament(QString name)
 void Chess24Manager::getTournament(QString name){
     WSRequest *req = sendMessage(Chess24Messages::getWebTournament,name);
     connect(req,&WSRequest::finished,[this](QString data){
-        emit gotTournamentDetails(QJsonDocument::fromJson(data.toUtf8()).object());
+        QJsonDocument doc = QJsonDocument::fromJson(data.toUtf8());
+        QJsonArray arr =  doc.array();
+        emit gotTournamentDetails(arr.at(0).toObject());
     });
 }
