@@ -22,6 +22,9 @@ ApplicationWindow {
             model: tournamentViewModel
             Layout.fillHeight: true
             selectionMode: SelectionMode.SingleSelection
+            onCurrentIndexChanged:{
+                tournamentViewModel.currentTournament = currentIndex
+            }
 
             TableViewColumn {
                 title: "Name"

@@ -18,6 +18,21 @@ QHash<int, QByteArray> TournamentViewModel::roleNames() const
     return roles;
 }
 
+void TournamentViewModel::setCurrentTournament(QModelIndex index)
+{
+    QModelIndex sourceIndex = mapToSource(index);
+
+    if(sourceIndex != m_currenTournament){
+        m_currenTournament = sourceIndex;
+        emit currentTournamentChanged(sourceIndex);
+    }
+}
+
+QModelIndex TournamentViewModel::currentTournament()
+{
+    return m_currenTournament;
+}
+
 bool TournamentViewModel::filterAcceptsRow(int source_row, const QModelIndex &source_parent) const
 {
     //Only show the tournaments that are subscribed to
