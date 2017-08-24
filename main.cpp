@@ -37,13 +37,6 @@ int main(int argc, char *argv[])
 
     Chess24 *chess24 = new Chess24(&app,*qnam);
 
-    TournamentsModel *tm = new TournamentsModel(&app);
-    TournamentViewModel *tvm = new TournamentViewModel(&app,false);
-    tvm->setSourceModel(tm);
-    RoundViewModel *rm = new RoundViewModel(&app);
-    rm->setSourceModel(tm);
-    MatchViewModel *mv = new MatchViewModel(&app);
-    mv->setSourceModel(tm);
 
     Chess24MessageParser *parser = new Chess24MessageParser(&app);
 
@@ -55,6 +48,18 @@ int main(int argc, char *argv[])
     QObject::connect(parser,&Chess24MessageParser::messageParsed,c24ws,&Chess24Websocket::handleMessage);
 
     Chess24Manager *c24Manager = new Chess24Manager(&app,*c24ws);
+
+
+    TournamentsModel *tm = new TournamentsModel(&app,*c24Manager);
+    TournamentViewModel *tvm = new TournamentViewModel(&app,false);
+    tvm->setSourceModel(tm);
+    RoundViewModel *rm = new RoundViewModel(&app);
+    rm->setSourceModel(tm);
+    MatchViewModel *mv = new MatchViewModel(&app);
+    mv->setSourceModel(tm);
+
+    //Get the tournament details when select a new tournament
+    QObject::connect(tvm,&TournamentViewModel::currentTournamentChanged,tm,&TournamentsModel::onCurrentTournamentChanged);
 
     //Asumes that everytime someone calls Chess24Manager.getTournaments we want to update the model
     QObject::connect(c24Manager,&Chess24Manager::gotTournaments,tm,&TournamentsModel::addTournaments);
