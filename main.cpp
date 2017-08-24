@@ -76,7 +76,7 @@ int main(int argc, char *argv[])
 
     QQmlApplicationEngine engine;
     engine.rootContext()->setContextProperty("chess24Login",chess24Login);
-    engine.rootContext()->setContextProperty("tournamentsModel",tvm);
+    engine.rootContext()->setContextProperty("tournamentViewModel",tvm);
     engine.rootContext()->setContextProperty("roundsModel",rm);
     engine.rootContext()->setContextProperty("matchesModel",mv);
     engine.rootContext()->setContextProperty("c24Manager",c24Manager);

@@ -19,7 +19,7 @@ ApplicationWindow {
         Text{ id: tournamentHeader;text: "TournamentView"}
         TreeView{
             id: tournamentsList
-            model: tournamentsModel
+            model: tournamentViewModel
             Layout.fillHeight: true
             selectionMode: SelectionMode.SingleSelection
 
