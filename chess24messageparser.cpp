@@ -1,6 +1,9 @@
 #include "chess24messageparser.h"
 #include <QString>
 #include <QtDebug>
+#include "chess24messages.h"
+
+using namespace Chess24Messages::Helpers;
 
 Chess24MessageParser::Chess24MessageParser(QObject *parent):
     QObject(parent)
@@ -10,7 +13,9 @@ Chess24MessageParser::Chess24MessageParser(QObject *parent):
 
 void Chess24MessageParser::parseMessage(QString msg)
 {
-    QStringList parts = msg.split(":");
+    QString header = getHeader(msg);
+
+    QStringList parts = header.split(":");
 
     bool ok;
     int msgType = parts[0].toInt(&ok);
@@ -45,13 +50,22 @@ void Chess24MessageParser::parseMessage(QString msg)
     case(Message::MessageType::ack):
     {
         //Id to the left of "+" and data to the right
-        QStringList ackParts = parts[3].split("+");
-        if(ackParts.length() != 2){return;}
+
+        QString data = getData(msg);
+
+        int ipluss = data.indexOf("+");
+        if(ipluss<0){return;}
+
+        QString before = data.mid(0,ipluss);
+
         bool ok = false;
-        int id = ackParts[0].toInt(&ok);//Get the msg id
+        int id = before.toInt(&ok);//Get the msg id
         if(!ok){return;}
 
-        emit messageParsed(Message(type,ackParts[1],id));
+
+        QString json = data.mid(ipluss+1,data.size()-ipluss+1);
+
+        emit messageParsed(Message(type,json,id));
 
         return;
     }
