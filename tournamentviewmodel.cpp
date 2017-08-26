@@ -7,28 +7,27 @@ TournamentViewModel::TournamentViewModel(QObject *parent, bool onlySubscribed)
 {
     setSortRole(static_cast<int>(Tournament::TournamentRoles::OriginalOrderRole));
     setDynamicSortFilter(true);
-    //sort(0);
 }
+
 
 QHash<int, QByteArray> TournamentViewModel::roleNames() const
 {
     QHash<int,QByteArray> roles;
     roles[static_cast<int>(Tournament::TournamentRoles::NameRole)] = "name";
     roles[static_cast<int>(Tournament::TournamentRoles::OriginalOrderRole)] = "originalOrder";
+    roles[static_cast<int>(Tournament::TournamentRoles::CurrentShownRoundRole)] = "currentShownRound";
     return roles;
 }
 
-void TournamentViewModel::setCurrentTournament(QModelIndex index)
+void TournamentViewModel::setCurrentTournament(int row)
 {
-    QModelIndex sourceIndex = mapToSource(index);
-
-    if(sourceIndex != m_currenTournament){
-        m_currenTournament = sourceIndex;
-        emit currentTournamentChanged(sourceIndex);
+    if(row != m_currenTournament){
+        m_currenTournament = row;
+        emit currentTournamentChanged(row);
     }
 }
 
-QModelIndex TournamentViewModel::currentTournament()
+int TournamentViewModel::currentTournament()
 {
     return m_currenTournament;
 }

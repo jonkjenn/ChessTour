@@ -9,7 +9,7 @@ class MatchViewModel : public QSortFilterProxyModel
 {
     Q_OBJECT
 public:
-    MatchViewModel(QObject *parent=0);
+    MatchViewModel(QObject *parent);
 
     QHash<int, QByteArray> roleNames() const;
 };

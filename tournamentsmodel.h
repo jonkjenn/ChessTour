@@ -36,7 +36,7 @@ public:
     bool addTournament(QString name, int originalOrder);
     bool addTournaments(QVariantList names);
     void updateTournamentDetails(QJsonObject json);
-    void onCurrentTournamentChanged(QModelIndex index);
+    void onCurrentTournamentChanged(int row);
 };
 
 #endif // TOURNAMENTSMODEL_H
