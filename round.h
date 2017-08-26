@@ -7,7 +7,7 @@
 class Round : public TournamentsItem
 {
 public:
-    Round(TournamentsItem *parent);
+    Round(TournamentsItem *parent, int number);
     int number;
     QString date;
     QString description;
@@ -22,13 +22,17 @@ public:
     QVariant data(int role) const override;
 
     // TournamentsItem interface
-public:
     TournamentsItem *child(int position) const override;
     int childCount() const override;
-    bool addChild(Match *);
+    int columnCount() const override;
+    bool addChild(TournamentsItem *) override;
+    int position(TournamentsItem *) override;
+    int position(int id);
+    bool setData(int role, const QVariant &value) override;
 
 private:
     QVector<Match*> matches;
+
 };
 
 #endif // ROUND_H

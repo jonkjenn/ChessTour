@@ -22,9 +22,15 @@ public:
     bool addChildren(QVector<Tournament *> newChildren);
     int position(TournamentsItem *) override;
     const Tournament* tournamentChild(int position);
+    Tournament *item(QString name);
+    int position(QString name);
 private:
     //QMap<QString,Tournament*> children;
     QVector<Tournament*> children;
+
+    // TournamentsItem interface
+public:
+    bool setData(int role, const QVariant &value) override;
 };
 
 #endif // ROOTITEM_H

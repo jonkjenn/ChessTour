@@ -11,6 +11,7 @@ ApplicationWindow {
     objectName: "appWindow"
 
     RowLayout{
+        anchors.fill: parent
         implicitWidth: 1024
         implicitHeight: 512
     ColumnLayout{
@@ -22,8 +23,16 @@ ApplicationWindow {
             model: tournamentViewModel
             Layout.fillHeight: true
             selectionMode: SelectionMode.SingleSelection
+
+            //onClicked: tournamentViewModel.sourceModel.setData(tournamentViewModel.mapToSource(currentIndex),
+
             onCurrentIndexChanged:{
-                tournamentViewModel.currentTournament = currentIndex
+                tournamentViewModel.currentTournament = tournamentViewModel.mapToSource(currentIndex).row
+                roundsView.model.rootIndex = roundsModel.mapFromSource(tournamentViewModel.mapToSource(tournamentsList.currentIndex))
+                //roundsSelection.setCurrentIndex(roundsModel.index(0,0,roundsView.rootIndex),0x0012)
+                //console.log("Should have updated rounds currentIndex")
+                //console.log(roundsView.currentIndex.row)
+                //console.log(roundsSelection.currentIndex.row)
             }
 
             TableViewColumn {
@@ -38,28 +47,76 @@ ApplicationWindow {
     ColumnLayout{
         Layout.fillWidth: true
         implicitWidth: 1024
-        property var currentIndex
+        //property var currentIndex
         id:tournamentView
-        TreeView{
-            id: roundsView
-            model: roundsModel
-            rootIndex: roundsModel.mapFromSource(tournamentViewModel.mapToSource(tournamentsList.currentIndex))
-            visible:tournamentsList.currentIndex.valid
-
-            TableViewColumn {
-                title: "Round"
-                role: "number"
+        ListView{
+            focus:true
+            implicitHeight: 20;
+            implicitWidth: 200;
+            id:roundsView
+            orientation: ListView.Horizontal
+            visible: model.rootIndex.valid
+            highlight: Rectangle { color: "lightsteelblue"; radius: 5 }
+            onCurrentIndexChanged: {
+                    roundsModel.indexFromRow(0,roundsView.model.rootIndex)
+                    //matchesView.model.rootIndex = matchesModel.mapFromSource(roundsModel.mapToSource(roundsModel.indexFromRow(roundsView.currentIndex,roundsView.model.rootIndex)))
+                    console.log("Set root index")
+                console.log(matchesView.model.rootIndex.row)
             }
-            TableViewColumn {
-                title: "Date"
-                role: "date"
+
+            model:DelegateModel{
+                model:roundsModel
+                delegate:Item{
+                    width: 15;height: 15
+                    Column{
+                        Text{
+                            text: number
+                        }
+                    }
+
+                    MouseArea {
+                                    anchors.fill: parent
+                                    onClicked: {
+                                        roundsView.currentIndex = index
+                                    }
+                                }
+
+                }
+
+            }
+                    onCountChanged: {
+                        console.log("Row: " + roundsView.model.rootIndex.row)
+                        console.log("count: " + roundsView.count)
+                    }
+        }
+
+        ListView{
+            implicitHeight: 512;implicitWidth: 400
+            focus:true
+            id:matchesView
+            visible:model.rootIndex.valid
+
+            model:DelegateModel{
+                model:matchesModel
+                delegate:Item{
+                    width: 200;height:25
+                    Row{
+                        Text{text:whiteRole}
+                        Text{text:blackRole}
+                    }
+                }
             }
         }
-        TreeView{
+
+        /*TreeView{
             id: matchesView
             model: matchesModel
-            rootIndex: matchesModel.mapFromSource(roundsModel.mapToSource(roundsView.currentIndex))
-            visible:roundsView.currentIndex.valid
+            visible:rootIndex.valid
+            rootIndex:
+            selection: ItemSelectionModel{
+                model:matchesModel
+                id: matchesSelection
+            }
 
             TableViewColumn{
                 title:"White"
@@ -70,7 +127,7 @@ ApplicationWindow {
                 title:"Black"
                 role:"blackRole"
             }
-        }
+        }*/
     }
     }
 

@@ -6,6 +6,9 @@
 #include "../tournamentsmodel.h"
 #include "../chess24messages.h"
 #include "../chess24.h"
+
+#include "testdata.h"
+
 #include <QJsonDocument>
 #include <QJsonObject>
 
@@ -28,6 +31,8 @@ private slots:
     void test_getBroadcastGame();
     void test_subscribeTournament();
     void test_subscribeBrodcastGame();
+
+    void test_rootTournamentByName();
 
     void test_getData();
     void test_getHeader();
@@ -148,6 +153,31 @@ void ChessTourTests::test_subscribeBrodcastGame()
     QVERIFY(o1.keys().contains("args"));
     QVERIFY(o1["args"].toArray().size() == 1);
     QVERIFY(o1["args"].toArray()[0].toString() == "model:BroadcastChessGameRedisAR:test321");
+}
+
+void ChessTourTests::test_rootTournamentByName()
+{
+    RootItem root(nullptr);
+    Tournament tour(nullptr,"Test tournament");
+    bool added = root.addChild(&tour);
+    QVERIFY(added == true);
+    const Tournament *t = &tour;
+    const Tournament *rt = root.item("Test tournament");
+    QVERIFY(rt == t);
+    root.addChild(new Tournament(nullptr,"Test tournament2"));
+    root.addChild(new Tournament(nullptr,"Test tournament3"));
+    root.addChild(new Tournament(nullptr,"Test tournament4"));
+    root.addChild(new Tournament(nullptr,"Test tournament5"));
+    root.addChild(new Tournament(nullptr,""));
+    root.addChild(new Tournament(nullptr,"asqiweqwdwqn)"));
+    root.addChild(new Tournament(nullptr,"asqiweqwdwqn)"));
+    root.addChild(new Tournament(nullptr,"___)"));
+    root.addChild(new Tournament(nullptr,"  "));
+    rt = root.item("Test tournament");
+    QVERIFY(rt == t);
+    rt = root.item("Test tournament5");
+    QVERIFY(rt != t);
+    QVERIFY(rt == root.tournamentChild(4));
 }
 
 void ChessTourTests::test_getData()

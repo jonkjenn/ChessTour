@@ -12,31 +12,7 @@ class Tournament;
 class Match: public TournamentsItem
 {
 public:
-    Match(TournamentsItem *parent,const Round &, const Tournament &);
-
-    QString resultWhite;
-    QString resultBlack;
-
-    Evaluation deep;
-    Evaluation quick;
-
-    QString white;
-    int whiteFide;
-    QString black;
-    int blackFide;
-
-    int priority;
-    QString position;
-    QString fullGameRKey;
-
-    QString currentFEN;
-    QString earlierFEN;
-    QStringList lastMoves;
-
-    QString engine;
-
-    const Round &round;
-    const Tournament &tournament;
+    Match(TournamentsItem *parent,int id);
 
     enum class MatchRoles{
         ResultWhiteRole = Qt::UserRole +1,
@@ -60,19 +36,44 @@ public:
         QuickDepthRole,
         QuickChangeRole,
         QuickPreviousMoveRole,
-        QuickCurrentMoveRole
+        QuickCurrentMoveRole,
+
+        FullGameRKeyRole,
+        IdRole
     };
 
+    int id;
     // TournamentsItem interface
-public:
     int columnCount() const override;
     QVariant data(int column) const override;
-
-    // TournamentsItem interface
-public:
-    //TournamentsItem *child(int position)
     int childCount() const override;
     bool addChild(TournamentsItem *) override;
+    TournamentsItem *child(int position) const override;
+    int position(TournamentsItem *) override;
+    bool setData(int role, const QVariant &value) override;
+
+private:
+    QString resultWhite;
+    QString resultBlack;
+
+    Evaluation deep;
+    Evaluation quick;
+
+    QString white;
+    int whiteFide;
+    QString black;
+    int blackFide;
+
+    int priority;
+    QString gamePosition;
+    QString fullGameRKey;
+
+    QString currentFEN;
+    QString earlierFEN;
+    QStringList lastMoves;
+
+    QString engine;
+
 };
 
 #endif // MATCH_H

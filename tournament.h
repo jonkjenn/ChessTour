@@ -9,14 +9,16 @@ class Tournament: public TournamentsItem
 {
 public:
     Tournament(TournamentsItem *parent,QString name = "Unnamed Tournament",int originalOrder = -1);
-    QString name;
     bool subscribed = false;
-    int originalOrder;
 
     enum class TournamentRoles{
         NameRole = Qt::UserRole+1,
-        OriginalOrderRole
+        OriginalOrderRole,
+        StatusRole,
+        EventTypeRole,
+        CurrentShownRoundRole
     };
+    QString name;
 
     // TournamentsItem interface
     int columnCount() const override;
@@ -26,12 +28,20 @@ public:
     int childCount() const override;
     bool addChild(TournamentsItem *) override;
     int position(TournamentsItem *) override;
+    int position(int id);
 
     QHash<int,QString> players;
 
 private:
     QVector<Round*> rounds;
+    int originalOrder;
+    QString status;
+    QString eventType;
+    int currentShownRound = -1;
 
+    // TournamentsItem interface
+public:
+    bool setData(int role, const QVariant &value) override;
 };
 
 #endif // TOURNAMENT_H

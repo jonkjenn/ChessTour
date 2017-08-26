@@ -59,3 +59,30 @@ int RootItem::position(TournamentsItem *item)
     Tournament *t = static_cast<Tournament*>(item);
     return children.indexOf(t);
 }
+
+int RootItem::position(QString name)
+{
+    for(int i=0;i<children.size();++i){
+        if(children.at(i)->name == name){
+            return i;
+        }
+    }
+    return -1;
+}
+
+Tournament *RootItem::item(QString name)
+{
+    auto pos = std::find_if(children.begin(),children.end(),[&name](const Tournament* t){return t->name == name;});
+    if (pos != children.end()){
+        return *pos;
+    }
+    else{
+        return nullptr;
+    }
+}
+
+
+bool RootItem::setData(int role, const QVariant &value)
+{
+    return false;
+}
