@@ -2,9 +2,6 @@
 #include "chess24websocket.h"
 #include "chess24messages.h"
 
-#include "tournament.h"
-#include "tournamentsitem.h"
-
 #include <QJsonDocument>
 #include <QJsonArray>
 

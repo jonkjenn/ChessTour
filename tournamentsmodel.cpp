@@ -6,6 +6,10 @@
 #include "tournament.h"
 #include "tournamentsitem.h"
 #include "chess24manager.h"
+#include <QtSql/QSqlDatabase>
+#include <QtSql/QSqlQuery>
+#include <QtSql/QSqlError>
+#include <QDir>
 
 namespace MatchStrings{//TODO: replace with string literal of some sort
     QString fullGameRKey = "fullGameRKey";
@@ -25,6 +29,7 @@ namespace MatchStrings{//TODO: replace with string literal of some sort
 TournamentsModel::TournamentsModel(QObject *parent, Chess24Manager &c24Manager):QAbstractItemModel(parent), c24Manager(c24Manager)
 {
     rootItem = static_cast<TournamentsItem*>(&rootItemObject);
+
 }
 
 TournamentsModel::~TournamentsModel()
@@ -37,14 +42,24 @@ QModelIndex TournamentsModel::index(int row, int column, const QModelIndex &pare
         return QModelIndex();
     }
 
-    TournamentsItem *parentItem;
     if(!parent.isValid()){
-        parentItem = rootItem;
+        return createIndex(row,column,root);
     }else{
-         parentItem = static_cast<TournamentsItem*>(parent.internalPointer())->child(parent.row());
+        TournamentsItem *t = static_cast<TournamentsItem*>(parent.internalPointer());
+        switch(t->ItemType){
+        case TournamentsItem::ItemType::Root://Parent is a tournament
+            return createIndex()
+                    break;
+        case TournamentsItem::ItemType::Tournament://Parent is a round
+            break;
+        case TournamentsItem::ItemType::Round://Parent is a match
+            break;
+        case TournamentsItem::ItemType::Match://Should never happen
+            break;
+
+        }
     }
 
-    return createIndex(row,column,parentItem);
 }
 
 QModelIndex TournamentsModel::parent(const QModelIndex &child) const

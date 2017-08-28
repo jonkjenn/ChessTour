@@ -3,7 +3,6 @@
 
 // add necessary includes here
 
-#include "../tournamentsmodel.h"
 #include "../chess24messages.h"
 #include "../chess24.h"
 
@@ -32,7 +31,7 @@ private slots:
     void test_subscribeTournament();
     void test_subscribeBrodcastGame();
 
-    void test_rootTournamentByName();
+    //void test_rootTournamentByName();
 
     void test_getData();
     void test_getHeader();
@@ -155,7 +154,7 @@ void ChessTourTests::test_subscribeBrodcastGame()
     QVERIFY(o1["args"].toArray()[0].toString() == "model:BroadcastChessGameRedisAR:test321");
 }
 
-void ChessTourTests::test_rootTournamentByName()
+/*void ChessTourTests::test_rootTournamentByName()
 {
     RootItem root(nullptr);
     Tournament tour(nullptr,"Test tournament");
@@ -178,7 +177,7 @@ void ChessTourTests::test_rootTournamentByName()
     rt = root.item("Test tournament5");
     QVERIFY(rt != t);
     QVERIFY(rt == root.tournamentChild(4));
-}
+}*/
 
 void ChessTourTests::test_getData()
 {

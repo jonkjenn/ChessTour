@@ -8,6 +8,7 @@
 class RoundViewModel:public QSortFilterProxyModel
 {
     Q_OBJECT
+
 public:
     RoundViewModel(QObject *);
 
@@ -15,8 +16,7 @@ public:
 public:
     QHash<int, QByteArray> roleNames() const override;
 
-    Q_INVOKABLE QModelIndex indexFromRow(int row, const QModelIndex &parent);
-
+    Q_INVOKABLE QModelIndex createChildIndex(int parentRow, int parentParentRow);
 };
 
 #endif // ROUNDVIEWMODEL_H

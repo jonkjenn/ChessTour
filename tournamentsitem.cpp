@@ -1,11 +1,16 @@
 #include "tournamentsitem.h"
 
-TournamentsItem::TournamentsItem(TournamentsItem *parentItem, ItemType type):
-    tourType(type),parent(parentItem)
+TournamentsItem::TournamentsItem(TournamentsItem::ItemType type)
 {
+
 }
 
-TournamentsItem *TournamentsItem::parentItem()
+TournamentsItem::TournamentsItem(TournamentsItem::ItemType type, int tourId):tourId(tourId)
 {
-    return this->parent;
+
+}
+
+TournamentsItem::TournamentsItem(TournamentsItem::ItemType type, int tourId, int roundId):tourId(tourId),roundId(roundId)
+{
+
 }

@@ -1,11 +1,6 @@
 #ifndef TOURNAMENTSITEM_H
 #define TOURNAMENTSITEM_H
 
-#include <QObject>
-#include <QVector>
-#include <QVariant>
-#include <QNetworkReply>
-
 class TournamentsItem
 {
 public:
@@ -16,20 +11,14 @@ public:
         Match
     };
 
-    TournamentsItem(TournamentsItem* parentItem ,ItemType type);
+    TournamentsItem(ItemType type);
+    TournamentsItem(ItemType type, int tourId);
+    TournamentsItem(ItemType type, int tourId, int roundId);
     virtual ~TournamentsItem() = default;
 
-    virtual TournamentsItem *child(int position) const = 0;
-    virtual int childCount() const = 0;
-    virtual int columnCount() const = 0;
-    virtual QVariant data(int role) const = 0;
-    virtual bool addChild(TournamentsItem*) = 0;
-    virtual int position(TournamentsItem*) = 0;
-    virtual bool setData(int role, const QVariant &value) = 0;
-    TournamentsItem* parentItem();
+    const int tourId = -1;
+    const int roundId = -1;
     const ItemType tourType;
-protected:
-    TournamentsItem *parent = nullptr;
 };
 
 

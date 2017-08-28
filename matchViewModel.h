@@ -12,6 +12,7 @@ public:
     MatchViewModel(QObject *parent);
 
     QHash<int, QByteArray> roleNames() const;
+    Q_INVOKABLE QModelIndex getRoot();
 };
 
 #endif // MATCHMODEL_H

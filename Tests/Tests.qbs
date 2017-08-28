@@ -5,6 +5,7 @@ Project{
         Depends { name: "Qt.testlib" }
         Depends { name: "Qt.gui" }
         Depends { name: "Qt.qml" }
+        Depends { name: "Qt.sql" }
         Depends { name: "Qt.quick" }
         Depends { name: "Qt.websockets" }
 
@@ -32,29 +33,11 @@ Project{
             "../disknetworkcookiejar.h",
             "../evaluation.cpp",
             "../evaluation.h",
-            "../match.cpp",
-            "../match.h",
-            "../matchViewModel.cpp",
-            "../matchViewModel.h",
             "../message.cpp",
             "../message.h",
             "../preparechess24ws.cpp",
             "../preparechess24ws.h",
-            "../rootitem.cpp",
-            "../rootitem.h",
-            "../round.cpp",
-            "../round.h",
-            "../roundviewmodel.cpp",
-            "../roundviewmodel.h",
-            "../tournament.cpp",
-            "../tournament.h",
-            "../tournamentsitem.cpp",
-            "../tournamentsitem.h",
-            "../tournamentsmodel.cpp",
-            "../tournamentsmodel.h",
             "../qml.qrc",
-            "../tournamentviewmodel.cpp",
-            "../tournamentviewmodel.h",
             "../wsrequest.cpp",
             "../wsrequest.h",
         ]

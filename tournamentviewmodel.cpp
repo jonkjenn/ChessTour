@@ -32,6 +32,11 @@ int TournamentViewModel::currentTournament()
     return m_currenTournament;
 }
 
+QModelIndex TournamentViewModel::createChildIndex(int row)
+{
+    return sourceModel()->index(row,0);
+}
+
 bool TournamentViewModel::filterAcceptsRow(int source_row, const QModelIndex &source_parent) const
 {
     //Only show the tournaments that are subscribed to

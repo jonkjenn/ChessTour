@@ -16,32 +16,53 @@ ApplicationWindow {
         implicitHeight: 512
     ColumnLayout{
             Layout.fillHeight: true
-            implicitWidth: 150
-        Text{ id: tournamentHeader;text: "TournamentView"}
-        TreeView{
-            id: tournamentsList
-            model: tournamentViewModel
+        Rectangle{
+            Layout.preferredHeight: 30
+            Layout.preferredWidth: tournamentsList.width
+
+            color: Material.color(Material.LightBlue)
+            Text{ id: tournamentHeader;text: "Tournaments2:";font.bold: true }
+        }
+        ListView{
             Layout.fillHeight: true
-            selectionMode: SelectionMode.SingleSelection
+            Layout.preferredWidth: 250
+            id: tournamentsList
+            boundsBehavior: Flickable.StopAtBounds
+            clip: true
+            focus:true
+            model: DelegateModel{
+                model: tournamentsSqlModel
+
+                delegate:Rectangle{
+                    id: rect
+                    height: 30
+                    width: tournamentsList.width
+                    color: ListView.isCurrentItem?Material.color(Material.Orange):Material.color(Material.LightBlue)
+                    Text {
+                        anchors.verticalCenter: rect.verticalCenter
+                        anchors.left: rect.left
+                        anchors.leftMargin: 5
+                        text:name
+                    }
+                    MouseArea {
+                        anchors.fill: rect
+                        onClicked: {
+                            console.log("Clicked")
+                            tournamentsList.currentIndex = index
+                        }
+                    }
+                }
+
+                //rowDelegate: Rectangle{
+                //color: (styleData.selected?Material.color(Material.Orange):Material.color(Material.LightBlue))
+            }
 
             //onClicked: tournamentViewModel.sourceModel.setData(tournamentViewModel.mapToSource(currentIndex),
 
             onCurrentIndexChanged:{
-                tournamentViewModel.currentTournament = tournamentViewModel.mapToSource(currentIndex).row
-                roundsView.model.rootIndex = roundsModel.mapFromSource(tournamentViewModel.mapToSource(tournamentsList.currentIndex))
-                //roundsSelection.setCurrentIndex(roundsModel.index(0,0,roundsView.rootIndex),0x0012)
-                //console.log("Should have updated rounds currentIndex")
-                //console.log(roundsView.currentIndex.row)
-                //console.log(roundsSelection.currentIndex.row)
+                tournamentsSqlModel.setCurrentIndex(currentIndex)
             }
 
-            TableViewColumn {
-                title: "Name"
-                role: "name"
-            }
-            rowDelegate: Rectangle{
-                color: (styleData.selected?Material.color(Material.Orange):Material.color(Material.LightBlue))
-            }
         }
     }
     ColumnLayout{
@@ -55,17 +76,18 @@ ApplicationWindow {
             implicitWidth: 200;
             id:roundsView
             orientation: ListView.Horizontal
-            visible: model.rootIndex.valid
+            //visible: model.rootIndex.valid
             highlight: Rectangle { color: "lightsteelblue"; radius: 5 }
             onCurrentIndexChanged: {
-                    roundsModel.indexFromRow(0,roundsView.model.rootIndex)
-                    //matchesView.model.rootIndex = matchesModel.mapFromSource(roundsModel.mapToSource(roundsModel.indexFromRow(roundsView.currentIndex,roundsView.model.rootIndex)))
-                    console.log("Set root index")
-                console.log(matchesView.model.rootIndex.row)
+                matchesView.model.rootIndex = matchesModel.mapFromSource(roundsModel.createChildIndex(currentIndex,roundsView.model.rootIndex.row));
             }
 
-            model:DelegateModel{
+            /*model:DelegateModel{
                 model:roundsModel
+                onRootIndexChanged: {
+                    matchesView.model.rootIndex = matchesModel.mapFromSource(roundsModel.createChildIndex(currentIndex,roundsView.model.rootIndex.row));
+                }
+
                 delegate:Item{
                     width: 15;height: 15
                     Column{
@@ -75,28 +97,25 @@ ApplicationWindow {
                     }
 
                     MouseArea {
-                                    anchors.fill: parent
-                                    onClicked: {
-                                        roundsView.currentIndex = index
-                                    }
-                                }
+                        anchors.fill: parent
+                        onClicked: {
+                            roundsView.currentIndex = index
+                        }
+                    }
 
                 }
 
-            }
-                    onCountChanged: {
-                        console.log("Row: " + roundsView.model.rootIndex.row)
-                        console.log("count: " + roundsView.count)
-                    }
+            }*/
         }
 
         ListView{
             implicitHeight: 512;implicitWidth: 400
             focus:true
             id:matchesView
-            visible:model.rootIndex.valid
+            //visible:model.rootIndex.valid
 
-            model:DelegateModel{
+            /*model:DelegateModel{
+                rootIndex: matchesModel.getRoot()
                 model:matchesModel
                 delegate:Item{
                     width: 200;height:25
@@ -105,7 +124,7 @@ ApplicationWindow {
                         Text{text:blackRole}
                     }
                 }
-            }
+            }*/
         }
 
         /*TreeView{
@@ -134,48 +153,48 @@ ApplicationWindow {
     Dialog{
         visible: !chess24Login.loggedin
         id: loginWrapper
-    contentItem:Rectangle{
-        color: Material.background
-        implicitWidth: 300
-        implicitHeight: 150
-        id: loginDialog
+        contentItem:Rectangle{
+            color: Material.background
+            implicitWidth: 300
+            implicitHeight: 150
+            id: loginDialog
 
-        ColumnLayout{
-            anchors.margins: 10
-            anchors.centerIn: loginDialog
-            TextField{
-                textColor: Material.foreground
-                implicitWidth: 250
-                id: username
-                KeyNavigation.tab: password
-                focus: true
-                placeholderText: "Enter username/email"
+            ColumnLayout{
+                anchors.margins: 10
+                anchors.centerIn: loginDialog
+                TextField{
+                    textColor: Material.foreground
+                    implicitWidth: 250
+                    id: username
+                    KeyNavigation.tab: password
+                    focus: true
+                    placeholderText: "Enter username/email"
+                }
+
+                TextField{
+                    implicitWidth: 250
+                    id: password
+                    echoMode: TextField.PasswordEchoOnEdit | null
+                    KeyNavigation.tab: username
+                    placeholderText: "Enter password"
+                }
+                RowLayout{
+                    Button{
+                        text: "Login"
+                        onClicked:chess24Login.login(username.text,password.text)
+                    }
+                    Button{
+                        text:"Cancel"
+                        onClicked: loginWrapper.visible = false
+                    }
+                }
             }
 
-            TextField{
-                implicitWidth: 250
-                id: password
-                echoMode: TextField.PasswordEchoOnEdit | null
-                KeyNavigation.tab: username
-                placeholderText: "Enter password"
-            }
-            RowLayout{
-                Button{
-                    text: "Login"
-                    onClicked:chess24Login.login(username.text,password.text)
-                }
-                Button{
-                    text:"Cancel"
-                    onClicked: loginWrapper.visible = false
-                }
-            }
+            onVisibleChanged: if(visible){
+                                  username.forceActiveFocus()
+                              }
+
         }
-
-        onVisibleChanged: if(visible){
-                              username.forceActiveFocus()
-                          }
-
-    }
     }
 
 }

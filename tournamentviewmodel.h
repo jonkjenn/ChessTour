@@ -19,6 +19,8 @@ public:
     void setCurrentTournament(int);
     int currentTournament();
 
+    Q_INVOKABLE QModelIndex createChildIndex(int row);
+
 signals:
     void currentTournamentChanged(int);
 

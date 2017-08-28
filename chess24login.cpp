@@ -1,9 +1,5 @@
 #include "chess24login.h"
 
-//View models
-#include "tournamentsmodel.h"
-#include "tournamentviewmodel.h"
-
 //PGN reader
 //#include "PGNGameCollection.h"
 #include <sstream>

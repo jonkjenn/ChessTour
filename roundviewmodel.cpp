@@ -8,7 +8,6 @@ RoundViewModel::RoundViewModel(QObject *parent):
 
 }
 
-
 QHash<int, QByteArray> RoundViewModel::roleNames() const
 {
     QHash<int,QByteArray> roles;
@@ -18,12 +17,7 @@ QHash<int, QByteArray> RoundViewModel::roleNames() const
     return roles;
 }
 
-QModelIndex RoundViewModel::indexFromRow(int row,const QModelIndex &parent)
+QModelIndex RoundViewModel::createChildIndex(int parentRow, int parentParentRow)
 {
-    QModelIndex i = index(row,0,parent);
-    qDebug() << i.model();
-    qDebug() << i.internalPointer();
-    TournamentsItem *t = static_cast<TournamentsItem*>(i.internalPointer());
-   return QModelIndex();
+    return sourceModel()->index(parentParentRow,0).child(parentRow,0);
 }
-

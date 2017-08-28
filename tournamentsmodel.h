@@ -27,10 +27,8 @@ public:
     bool hasChildren(const QModelIndex &parent) const override;
 
     void httpFinished();
-    TournamentsItem *rootItem = nullptr;
-    RootItem rootItemObject{nullptr};
     Chess24Manager &c24Manager;
-
+    TournamentsItem root{TournamentsItem::ItemType::Root};
 
     bool addChild(const QModelIndex &parent,TournamentsItem *);
     bool addTournament(QString name, int originalOrder);

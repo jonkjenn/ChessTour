@@ -5,6 +5,7 @@ CppApplication {
     Depends { name: "Qt.network" }
     Depends { name: "Qt.websockets" }
     Depends { name: "Qt.quick" }
+    Depends { name: "Qt.sql" }
     Depends { name: "pgnmodule" }
 
     // Additional import path used to resolve QML modules in Qt Creator's code model
@@ -31,6 +32,27 @@ CppApplication {
 
         //"matchmodel.cpp",
         //"matchmodel.h",
+
+    /*
+        "match.cpp",
+        "match.h",
+        "matchViewModel.cpp",
+        "matchViewModel.h",
+        "round.cpp",
+        "round.h",
+        "roundviewmodel.cpp",
+        "roundviewmodel.h",
+        "tournament.cpp",
+        "tournament.h",
+        "tournamentsitem.cpp",
+        "tournamentsitem.h",
+        "tournamentsmodel.cpp",
+        "tournamentsmodel.h",
+        "rootitem.cpp",
+        "rootitem.h",
+        "tournamentviewmodel.cpp",
+        "tournamentviewmodel.h",
+        */
     files: [
         "chess24.cpp",
         "chess24.h",
@@ -42,6 +64,8 @@ CppApplication {
         "chess24messageparser.h",
         "chess24messages.cpp",
         "chess24messages.h",
+        "chess24sqlhandler.cpp",
+        "chess24sqlhandler.h",
         "chess24websocket.cpp",
         "chess24websocket.h",
         "datasource.h",
@@ -50,29 +74,17 @@ CppApplication {
         "evaluation.cpp",
         "evaluation.h",
         "main.cpp",
-        "match.cpp",
-        "match.h",
-        "matchViewModel.cpp",
-        "matchViewModel.h",
+        "matchsqlmodel.cpp",
+        "matchsqlmodel.h",
         "message.cpp",
         "message.h",
         "preparechess24ws.cpp",
         "preparechess24ws.h",
-        "rootitem.cpp",
-        "rootitem.h",
-        "round.cpp",
-        "round.h",
-        "roundviewmodel.cpp",
-        "roundviewmodel.h",
-        "tournament.cpp",
-        "tournament.h",
-        "tournamentsitem.cpp",
-        "tournamentsitem.h",
-        "tournamentsmodel.cpp",
-        "tournamentsmodel.h",
         "qml.qrc",
-        "tournamentviewmodel.cpp",
-        "tournamentviewmodel.h",
+        "roundssqlmodel.cpp",
+        "roundssqlmodel.h",
+        "tournamentssqlmodel.cpp",
+        "tournamentssqlmodel.h",
         "wsrequest.cpp",
         "wsrequest.h",
     ]

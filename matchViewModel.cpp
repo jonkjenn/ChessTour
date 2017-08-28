@@ -1,5 +1,6 @@
 #include "matchViewModel.h"
 #include "match.h"
+#include "tournamentsmodel.h"
 
 QHash<int,QByteArray> MatchViewModel::roleNames() const{
     QHash<int, QByteArray> roles;
@@ -28,6 +29,12 @@ QHash<int,QByteArray> MatchViewModel::roleNames() const{
     roles.insert(static_cast<int>(Match::MatchRoles::IdRole),"idRole");
 
     return roles;
+}
+
+QModelIndex MatchViewModel::getRoot()
+{
+    TournamentsModel *tm = static_cast<TournamentsModel*>(sourceModel());
+    return mapFromSource(tm->index(2,0,QModelIndex()).child(0,0));
 }
 
 MatchViewModel::MatchViewModel(QObject *parent):
