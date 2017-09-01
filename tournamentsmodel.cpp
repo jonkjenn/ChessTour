@@ -11,7 +11,7 @@
 #include <QtSql/QSqlError>
 #include <QDir>
 
-namespace MatchStrings{//TODO: replace with string literal of some sort
+namespace MStr{//TODO: replace with string literal of some sort
     QString fullGameRKey = "fullGameRKey";
     QString player = "player";
     QString white = "white";
@@ -325,7 +325,7 @@ void TournamentsModel::updateTournamentDetails(QJsonObject json)
             //	.value(games).toObject()				"games": {
             //	.begin().value().toObject()					    "1": {
             QJsonObject game = matches[matchKey].toObject()
-                    .value(MatchStrings::games).toObject()
+                    .value(MStr::games).toObject()
                     .begin().value().toObject();
 
             int id = matchKey.toInt();
@@ -341,17 +341,17 @@ void TournamentsModel::updateTournamentDetails(QJsonObject json)
 
             QModelIndex matchIndex = index(matchPos,0,roundIndex);
 
-            if(game.keys().contains(MatchStrings::fullGameRKey)){
-                setData(matchIndex,game[MatchStrings::fullGameRKey].toString(),static_cast<int>(Match::MatchRoles::FullGameRKeyRole));
+            if(game.keys().contains(MStr::fullGameRKey)){
+                setData(matchIndex,game[MStr::fullGameRKey].toString(),static_cast<int>(Match::MatchRoles::FullGameRKeyRole));
             }
 
-            if(game.keys().contains(MatchStrings::player)){
+            if(game.keys().contains(MStr::player)){
                 bool ok = false;
-                int white = game.value(MatchStrings::player).toObject().value(MatchStrings::white).toString().toInt(&ok);
+                int white = game.value(MStr::player).toObject().value(MStr::white).toString().toInt(&ok);
                 if(!ok){//Could maybe assume is names then
                    continue;
                 }
-                int black = game.value(MatchStrings::player).toObject().value(MatchStrings::black).toString().toInt(&ok);
+                int black = game.value(MStr::player).toObject().value(MStr::black).toString().toInt(&ok);
                 setData(matchIndex,white,static_cast<int>(Match::MatchRoles::WhiteFideRole));
                 setData(matchIndex,black,static_cast<int>(Match::MatchRoles::BlackFideRole));
             }

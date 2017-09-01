@@ -75,3 +75,5 @@ Thumbs.db
 # Qt qbs
 *.qbs.user
 *.qbs.user.*
+
+/stuff

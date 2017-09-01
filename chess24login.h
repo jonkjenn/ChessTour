@@ -5,7 +5,6 @@
 #include <QQmlEngine>
 
 #include "chess24.h"
-#include "chess24websocket.h"
 #include "preparechess24ws.h"
 #include "message.h"
 

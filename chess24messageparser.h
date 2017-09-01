@@ -1,7 +1,13 @@
 #ifndef CHESS24MESSAGEPARSER_H
 #define CHESS24MESSAGEPARSER_H
 #include <QObject>
+#include <QJsonObject>
 #include "message.h"
+
+struct WebTournamentRedisAR{
+    QString tournament;
+    QJsonObject args;
+};
 
 class Chess24MessageParser:public QObject
 {
@@ -12,6 +18,7 @@ public:
 
 signals:
      void messageParsed(Message);
+     void webTournamentRedisAR(WebTournamentRedisAR);
 
    public slots:
     void parseMessage(QString msg);

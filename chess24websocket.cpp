@@ -4,6 +4,7 @@
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QJsonArray>
+#include <QTimer>
 
 #include "chess24messages.h"
 #include "chess24login.h"
@@ -20,8 +21,20 @@ Chess24Websocket::Chess24Websocket(QObject *parent, const QNetworkAccessManager 
     connect(&ws,static_cast<void(QWebSocket::*)(QAbstractSocket::SocketError)>(&QWebSocket::error),this,&Chess24Websocket::socketError);
     connect(&ws,&QWebSocket::textMessageReceived,this,&Chess24Websocket::onTextReceived);
 
-
     connect(&prepWS,&PrepareChess24WS::success,this,&Chess24Websocket::connectWS);
+
+    tokenTimer.setInterval(2000);
+    connect(&tokenTimer,&QTimer::timeout,[this]{
+        if(tokens<maxTokens){
+            tokens += 1;
+        }
+    });
+    tokenTimer.start();
+
+    msgQTimer.setInterval(1000);
+    connect(&msgQTimer,&QTimer::timeout,this,&Chess24Websocket::send);
+    msgQTimer.start();
+
 }
 
 
@@ -44,23 +57,48 @@ void Chess24Websocket::onLoggedInChanged()
     if(chess24Login.loggedIn()){
         userData = chess24Login.userData();
         prepWS.start();
+        loggedIn = true;
+    }else{
+        loggedIn = false;
+    }
+}
+
+void Chess24Websocket::send(){
+    if(tokens>0){
+        if(msgQ.size()>0){
+            tokens -= 1;
+            qDebug() << "Sending message: " << msgQ.at(0);
+            ws.sendTextMessage(msgQ.dequeue());
+        }
     }
 }
 
 WSRequest* Chess24Websocket::sendMessage(QString msg, int messageId)
 {
-    QMap<int,WSRequest*>::iterator it = requests.insert(messageId,new WSRequest(messageId,this));
+    WSRequest* req = requests.insert(messageId,new WSRequest(messageId,this)).value();
 
-    qDebug() << "Sending message: " << msg;
+    if(loggedIn){
+        msgQ.enqueue(msg);
+    }else{
+        //Return empty data in 1 second
+        QTimer *t = new QTimer(this);
+        t->setInterval(1000);
+        t->setSingleShot(true);
+        connect(t,&QTimer::timeout,[t,req](){
+            req->data("");
+            t->deleteLater();
+        });
+        t->start();
+    }
 
-    ws.sendTextMessage(msg);
-
-    return it.value();
+    return req;
 }
 
 void Chess24Websocket::sendMessage(QString msg)
 {
-    ws.sendTextMessage(msg);
+    if(loggedIn){
+        msgQ.enqueue(msg);
+    }
 }
 
 void Chess24Websocket::setIsConnected(bool val)
@@ -107,7 +145,7 @@ void Chess24Websocket::socketError(QAbstractSocket::SocketError error)
 void Chess24Websocket::handleMessage(Message msg){
     switch(msg.type){
 
-    case(Message::MessageType::connect):
+    case(MessageType::connect):
     {
 
         int id = increaseAndGetMessageId();
@@ -117,13 +155,13 @@ void Chess24Websocket::handleMessage(Message msg){
         });
         return;
     }
-    case(Message::MessageType::heartbeat):
+    case(MessageType::heartbeat):
     {
         qDebug() << "Sendt heartbeat";
         sendMessage(Chess24Messages::heartBeat());
         return;
     }
-    case(Message::MessageType::ack):
+    case(MessageType::ack):
     {
         requests[msg.id]->data(msg.data);
         requests.remove(msg.id);

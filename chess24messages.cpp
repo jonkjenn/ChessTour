@@ -82,6 +82,10 @@ QString subscribeWebTournament(QString name){
     return header + buildData("subscribe",{model_webTournament + name});
 }
 
+QString unSubscribeWebTournament(QString name){
+    return header + buildData("unsubscribe",{model_webTournament + name});
+}
+
 QString subscribeBroadcastChessGame(QString name){
     return header + buildData("subscibe",{model_broadcastChessGame + name});
 }

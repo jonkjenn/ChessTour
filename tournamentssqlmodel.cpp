@@ -7,7 +7,7 @@
 TournamentsSqlModel::TournamentsSqlModel(QObject *parent,QSqlDatabase database):
     QSqlTableModel(parent,database),database(database)
 {
-    //Could use if not exist create instead of checking
+    /*//Could use if not exist create instead of checking
     QSqlQuery query("SELECT name from sqlite_master where type = \"table\" and name = \"Tournament\"",database);
     if(!query.next()){
         database.transaction();
@@ -17,9 +17,12 @@ TournamentsSqlModel::TournamentsSqlModel(QObject *parent,QSqlDatabase database):
         QSqlQuery tournamnet("CREATE TABLE Tournament (Name STRING NOT NULL UNIQUE, OriginalOrder INT UNIQUE, Status STRING, EventType STRING, CurrentShownRound INT, Id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, Subscribed BOOLEAN);",database);
         QSqlQuery fk_on("PRAGMA foreign_keys = on;",database);
         database.commit();
-    }
+    }*/
 }
 
+QVariant TournamentsSqlModel::data(int row, QString columnName) const{
+    return data(index(row,fieldIndex(columnName)),Qt::DisplayRole);
+}
 
 QVariant TournamentsSqlModel::data(const QModelIndex &index, int role) const
 {
@@ -34,6 +37,11 @@ QVariant TournamentsSqlModel::data(const QModelIndex &index, int role) const
        }
     }
     return value;
+}
+
+bool TournamentsSqlModel::setData(int row,QString column, const QVariant &value){
+    QModelIndex idx = index(row,fieldIndex(column));
+    return setData(idx,value,Qt::EditRole);
 }
 
 bool TournamentsSqlModel::setData(const QModelIndex &item, const QVariant &value, int role)
@@ -74,11 +82,12 @@ int TournamentsSqlModel::getPk(int row)
 void TournamentsSqlModel::setCurrentIndex(int row)
 {
     emit currentIndexChanged(row);
+    //emit currentPKChanged(getPk(row));
 }
-
 
 bool TournamentsSqlModel::select()
 {
+    setSort(fieldIndex("OriginalOrder"),Qt::SortOrder::AscendingOrder);
     QSqlTableModel::select();
 
     //Create index PrimaryKey -> row (the row number used internally in model not in database)

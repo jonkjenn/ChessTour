@@ -1,10 +1,13 @@
 #include <QtTest>
 #include <QCoreApplication>
+#include <QSignalSpy>
+#include <QTimer>
 
 // add necessary includes here
 
 #include "../chess24messages.h"
 #include "../chess24.h"
+#include "../tokencontainer.h"
 
 #include "testdata.h"
 
@@ -31,6 +34,7 @@ private slots:
     void test_subscribeTournament();
     void test_subscribeBrodcastGame();
 
+    void test_tokenContainer();
     //void test_rootTournamentByName();
 
     void test_getData();
@@ -199,6 +203,67 @@ void ChessTourTests::test_getHeader()
     QVERIFY(getHeader("5:::{}") == "5:::");
     QVERIFY(getHeader("5:1+::{asdkjaskdjaskdjaskdjkasjdkasjdkasj}") == "5:1+::");
     QVERIFY(getHeader("6:asdkasdjsakd:asdasd:{}") == "6:asdkasdjsakd:asdasd:");
+}
+
+void ChessTourTests::test_tokenContainer(){
+    QTimer timer(nullptr);
+    timer.setInterval(0);
+    timer.setSingleShot(true);
+    TokenContainer t(nullptr,timer,5);
+    QSignalSpy spy(&t,SIGNAL(notifyTokenAvailableChanged(bool)));
+
+    QVERIFY(t.getToken() == false);
+    QVERIFY(t.getToken() == false);
+    QVERIFY(t.getToken() == false);
+    timer.start();
+    QCoreApplication::processEvents();
+    QCOMPARE(spy.count() , 1);
+    QVERIFY(t.getToken() == true);
+    QCOMPARE(spy.count() , 2);
+    QVERIFY(t.getToken() == false);
+    timer.start();
+    QCoreApplication::processEvents();
+    QCOMPARE(spy.count() , 3);
+    QVERIFY(t.getToken() == true);
+    QCOMPARE(spy.count() , 4);
+    QVERIFY(t.getToken() == false);
+    timer.start();
+    QCoreApplication::processEvents();
+    timer.start();
+    QCoreApplication::processEvents();
+    timer.start();
+    QCoreApplication::processEvents();
+    timer.start();
+    QCoreApplication::processEvents();
+    timer.start();
+    QCoreApplication::processEvents();
+    QCOMPARE(spy.count() , 5);
+    QVERIFY(t.getToken() == true);//1
+    QVERIFY(t.getToken() == true);//2
+    QVERIFY(t.getToken() == true);//3
+    QVERIFY(t.getToken() == true);//4
+    QVERIFY(t.getToken() == true);//5
+    QCOMPARE(spy.count() , 6);
+    QVERIFY(t.getToken() == false);//5
+
+    TokenContainer t2(nullptr,timer,1);
+    QSignalSpy spy2(&t2,SIGNAL(notifyTokenAvailableChanged(bool)));
+    QVERIFY(t2.getToken() == false);
+    QVERIFY(t2.getToken() == false);
+    timer.start();
+    QCoreApplication::processEvents();
+    QCOMPARE(spy2.count() , 1);
+    QVERIFY(t2.getToken() == true);
+    QCOMPARE(spy2.count() , 2);
+    QVERIFY(t2.getToken() == false);
+    timer.start();
+    QCoreApplication::processEvents();
+    timer.start();
+    QCoreApplication::processEvents();
+    QCOMPARE(spy2.count() , 3);
+    QVERIFY(t2.getToken() == true);
+    QCOMPARE(spy2.count() , 4);
+    QVERIFY(t2.getToken() == false);
 }
 
 QTEST_MAIN(ChessTourTests)

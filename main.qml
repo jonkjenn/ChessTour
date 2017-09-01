@@ -1,160 +1,77 @@
 import QtQuick 2.7
-import QtQuick.Controls 1.4
+import QtQuick.Controls 2.2
 import QtQuick.Layouts 1.3
 import QtQml.Models 2.2
 import QtQuick.Dialogs 1.2
 import QtQuick.Controls.Material 2.2
+import QtQuick.Controls.Styles 1.4
 
 ApplicationWindow {
     visible: true
     title: qsTr("Chess tournament viewer")
     objectName: "appWindow"
+    Material.foreground: "White"
 
     RowLayout{
         anchors.fill: parent
+        anchors.margins: 10
         implicitWidth: 1024
         implicitHeight: 512
-    ColumnLayout{
+        ColumnLayout{
             Layout.fillHeight: true
-        Rectangle{
-            Layout.preferredHeight: 30
-            Layout.preferredWidth: tournamentsList.width
+            Item{
+                id: tournmanetListHeader
+                Layout.preferredHeight: 30
+                Layout.preferredWidth: tournamentList.width
+                Label{
+                    anchors.centerIn: tournmanetListHeader
+                    text: "Tournaments";
+                    font.bold: true
+                }
+            }
+            Button{
+                anchors.horizontalCenter: parent.horizontalCenter
+                implicitHeight: 30
+                implicitWidth: 90
+                id: control
+                text: qsTr("Refresh")
+                onClicked:c24Manager.onRequestRefreshTournaments()
+                opacity: c24Manager.canRequestTournaments?1:0.3
+            }
 
-            color: Material.color(Material.LightBlue)
-            Text{ id: tournamentHeader;text: "Tournaments2:";font.bold: true }
+            TournamentList{
+                id: tournamentList
+                Layout.fillHeight: true
+                Layout.preferredWidth: 250
+            }
         }
-        ListView{
+        ColumnLayout{
+            Layout.fillWidth: true
             Layout.fillHeight: true
-            Layout.preferredWidth: 250
-            id: tournamentsList
-            boundsBehavior: Flickable.StopAtBounds
-            clip: true
-            focus:true
-            model: DelegateModel{
-                model: tournamentsSqlModel
+            //property var currentIndex
+            id:tournamentView
 
-                delegate:Rectangle{
-                    id: rect
-                    height: 30
-                    width: tournamentsList.width
-                    color: ListView.isCurrentItem?Material.color(Material.Orange):Material.color(Material.LightBlue)
-                    Text {
-                        anchors.verticalCenter: rect.verticalCenter
-                        anchors.left: rect.left
-                        anchors.leftMargin: 5
-                        text:name
-                    }
-                    MouseArea {
-                        anchors.fill: rect
-                        onClicked: {
-                            console.log("Clicked")
-                            tournamentsList.currentIndex = index
-                        }
-                    }
-                }
-
-                //rowDelegate: Rectangle{
-                //color: (styleData.selected?Material.color(Material.Orange):Material.color(Material.LightBlue))
+            RoundList{
+                id:roundsView
+                Layout.fillWidth: true
             }
 
-            //onClicked: tournamentViewModel.sourceModel.setData(tournamentViewModel.mapToSource(currentIndex),
-
-            onCurrentIndexChanged:{
-                tournamentsSqlModel.setCurrentIndex(currentIndex)
-            }
-
-        }
-    }
-    ColumnLayout{
-        Layout.fillWidth: true
-        implicitWidth: 1024
-        //property var currentIndex
-        id:tournamentView
-        ListView{
-            focus:true
-            implicitHeight: 20;
-            implicitWidth: 200;
-            id:roundsView
-            orientation: ListView.Horizontal
-            //visible: model.rootIndex.valid
-            highlight: Rectangle { color: "lightsteelblue"; radius: 5 }
-            onCurrentIndexChanged: {
-                matchesView.model.rootIndex = matchesModel.mapFromSource(roundsModel.createChildIndex(currentIndex,roundsView.model.rootIndex.row));
-            }
-
-            /*model:DelegateModel{
-                model:roundsModel
-                onRootIndexChanged: {
-                    matchesView.model.rootIndex = matchesModel.mapFromSource(roundsModel.createChildIndex(currentIndex,roundsView.model.rootIndex.row));
-                }
-
-                delegate:Item{
-                    width: 15;height: 15
-                    Column{
-                        Text{
-                            text: number
-                        }
-                    }
-
-                    MouseArea {
-                        anchors.fill: parent
-                        onClicked: {
-                            roundsView.currentIndex = index
-                        }
-                    }
-
-                }
-
+            /*MatchTable{
+                Layout.fillWidth: true
+                Layout.fillHeight: true
             }*/
+
+            MatchList{
+                Layout.fillWidth: true
+                Layout.fillHeight: true
+            }
         }
-
-        ListView{
-            implicitHeight: 512;implicitWidth: 400
-            focus:true
-            id:matchesView
-            //visible:model.rootIndex.valid
-
-            /*model:DelegateModel{
-                rootIndex: matchesModel.getRoot()
-                model:matchesModel
-                delegate:Item{
-                    width: 200;height:25
-                    Row{
-                        Text{text:whiteRole}
-                        Text{text:blackRole}
-                    }
-                }
-            }*/
-        }
-
-        /*TreeView{
-            id: matchesView
-            model: matchesModel
-            visible:rootIndex.valid
-            rootIndex:
-            selection: ItemSelectionModel{
-                model:matchesModel
-                id: matchesSelection
-            }
-
-            TableViewColumn{
-                title:"White"
-                role:"whiteRole"
-            }
-
-            TableViewColumn{
-                title:"Black"
-                role:"blackRole"
-            }
-        }*/
-    }
     }
 
     Dialog{
         visible: !chess24Login.loggedin
         id: loginWrapper
         contentItem:Rectangle{
-            color: Material.background
             implicitWidth: 300
             implicitHeight: 150
             id: loginDialog
@@ -163,7 +80,6 @@ ApplicationWindow {
                 anchors.margins: 10
                 anchors.centerIn: loginDialog
                 TextField{
-                    textColor: Material.foreground
                     implicitWidth: 250
                     id: username
                     KeyNavigation.tab: password

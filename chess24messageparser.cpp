@@ -2,6 +2,8 @@
 #include <QString>
 #include <QtDebug>
 #include "chess24messages.h"
+#include <QJsonDocument>
+#include <QJsonArray>
 
 using namespace Chess24Messages::Helpers;
 
@@ -24,30 +26,69 @@ void Chess24MessageParser::parseMessage(QString msg)
         return;
     }
 
-    auto type = static_cast<Message::MessageType>(msgType);
+    auto type = static_cast<MessageType>(msgType);
     switch(type){
-    case(Message::MessageType::disconnect):
+    case(MessageType::disconnect):
         emit messageParsed(Message(type));
         break;
-    case(Message::MessageType::connect):
+    case(MessageType::connect):
     {
         emit messageParsed(Message(type));
         return;
     }
-    case(Message::MessageType::heartbeat):
-        emit messageParsed(Message(type,msg));
-        //ws.sendTextMessage(msg);
+    case(MessageType::heartbeat):
+    {
+        Message m(type);
+        m.data = msg;
+        emit messageParsed(m);
+    }
         return;
-    case(Message::MessageType::message):
+    case(MessageType::message):
         emit messageParsed(Message(type));
         return;
-    case(Message::MessageType::json):
+    case(MessageType::json):
         emit messageParsed(Message(type));
         return;
-    case(Message::MessageType::event):
-        emit messageParsed(Message(type));
+    case(MessageType::event):
+    {
+        qDebug() << "Event " << msg;
+        QString data = getData(msg);
+        QJsonDocument doc = QJsonDocument::fromJson(data.toUtf8());
+        QJsonObject root = doc.object();
+        if(!root.keys().contains("name")){
+            qDebug() << "Event does not contain name";
+            return;
+        }
+        QString name = root.value("name").toString();
+        if(!name.startsWith("model:")){
+            qDebug() << "Unknown event name";
+            qDebug() << data;
+            return;
+        }
+
+        QString model = name.mid(6);
+        if(!model.startsWith("webTournamentRedisAR:")){
+            qDebug() << "Unknown model name";
+            qDebug() << data;
+            return;
+        }
+        QString tournament = model.mid(model.indexOf(":")+1);
+        qDebug() << tournament;
+
+        if(!root.keys().contains("args")){
+            qDebug() << "Event does not contain args";
+            return;
+        }
+
+        QJsonArray argsWrapper = root.value("args").toArray();
+        WebTournamentRedisAR tourRedis;
+        tourRedis.tournament = tournament;
+        tourRedis.args = argsWrapper.at(0).toObject();
+        emit webTournamentRedisAR(tourRedis);
+
         return;
-    case(Message::MessageType::ack):
+    }
+    case(MessageType::ack):
     {
         //Id to the left of "+" and data to the right
 
@@ -65,14 +106,18 @@ void Chess24MessageParser::parseMessage(QString msg)
 
         QString json = data.mid(ipluss+1,data.size()-ipluss+1);
 
-        emit messageParsed(Message(type,json,id));
+        Message m(type);
+        m.data = json;
+        m.id = id;
+
+        emit messageParsed(m);
 
         return;
     }
-    case(Message::MessageType::error):
+    case(MessageType::error):
         emit messageParsed(Message(type));
         return;
-    case(Message::MessageType::noop):
+    case(MessageType::noop):
         emit messageParsed(Message(type));
         return;
     }

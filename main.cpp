@@ -9,16 +9,21 @@
 #include <QtSql/QSqlQuery>
 #include <QtSql/QSqlError>
 #include <QDir>
+#include <QTimer>
 
 #include "tournamentssqlmodel.h"
-#include "chess24sqlhandler.h"
+#include "roundssqlmodel.h"
+#include "livematchsqlmodel.h"
+#include "tokencontainer.h"
 
+#include "chess24sqlhandler.h"
 #include "chess24login.h"
 #include "chess24.h"
 #include "chess24messages.h"
 #include "chess24messageparser.h"
 #include "chess24login.h"
 #include "chess24manager.h"
+#include "chess24websocket.h"
 
 #include "disknetworkcookiejar.h"
 
@@ -26,11 +31,33 @@
     QJSValue backend = engine->newQObject(new Backend(engine));
     return backend;
 }*/
+void myMessageOutput(QtMsgType type, const QMessageLogContext &context, const QString &msg)
+{
+    QByteArray localMsg = msg.toLocal8Bit();
+    switch (type) {
+    case QtDebugMsg:
+        fprintf(stderr, "Debug: %s (%s:%u, %s)\n", localMsg.constData(), context.file, context.line, context.function);
+        break;
+    case QtInfoMsg:
+        fprintf(stderr, "Info: %s (%s:%u, %s)\n", localMsg.constData(), context.file, context.line, context.function);
+        break;
+    case QtWarningMsg:
+        fprintf(stderr, "Warning: %s (%s:%u, %s)\n", localMsg.constData(), context.file, context.line, context.function);
+        break;
+    case QtCriticalMsg:
+        fprintf(stderr, "Critical: %s (%s:%u, %s)\n", localMsg.constData(), context.file, context.line, context.function);
+        break;
+    case QtFatalMsg:
+        fprintf(stderr, "Fatal: %s (%s:%u, %s)\n", localMsg.constData(), context.file, context.line, context.function);
+        abort();
+    }
+}
 
 using namespace std;
 
 int main(int argc, char *argv[])
 {
+    qInstallMessageHandler(myMessageOutput);
     QCoreApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
     QCoreApplication::setOrganizationName("Jonkjenn");
     QCoreApplication::setOrganizationDomain("jonkjenn.com");
@@ -53,9 +80,8 @@ int main(int argc, char *argv[])
     QObject::connect(c24ws,&Chess24Websocket::messageReceived,parser,&Chess24MessageParser::parseMessage);
     QObject::connect(parser,&Chess24MessageParser::messageParsed,c24ws,&Chess24Websocket::handleMessage);
 
-    Chess24Manager *c24Manager = new Chess24Manager(&app,*c24ws);
 
-    QSqlDatabase db = QSqlDatabase::addDatabase("QSQLITE","Tournament");
+    QSqlDatabase db = QSqlDatabase::addDatabase("QSQLITE");
     db.setDatabaseName(QDir::currentPath() + QDir::separator() + "db.sqlite");
     if(!db.open()){//TODO::Error handling
         qDebug() << "Could not open database";
@@ -66,27 +92,29 @@ int main(int argc, char *argv[])
     tsm->setTable("Tournament");
     tsm->setEditStrategy(QSqlTableModel::OnFieldChange);
     tsm->select();
-    Chess24SqlHandler *c24Sql = new Chess24SqlHandler(&app,db,tsm,*c24Manager);
 
-    /*TournamentsModel *tm = new TournamentsModel(&app,*c24Manager);
-    TournamentViewModel *tvm = new TournamentViewModel(&app,false);
-    tvm->setSourceModel(tm);
-    RoundViewModel *rm = new RoundViewModel(&app);
-    rm->setSourceModel(tm);
-    MatchViewModel *mv = new MatchViewModel(&app);
-    mv->setSourceModel(tm);*/
+    RoundsSqlModel *rsm = new RoundsSqlModel(&app,db);
+    rsm->setTable("Round");
+    rsm->setEditStrategy(QSqlTableModel::OnFieldChange);
 
+    LiveMatchSqlModel *lsm = new LiveMatchSqlModel(&app,db);
 
-    //tsm->setRelation(4,QSqlRelation("Players","FideId","Name"));
-    //tsm->setRelation(5,QSqlRelation("Players","FideId","Name"));
+    Chess24SqlHandler *c24Sql = new Chess24SqlHandler(&app,db,*tsm,*rsm,*lsm);
+
+    QTimer *tournamentTokenTimer = new QTimer(&app);
+    tournamentTokenTimer->setInterval(60*1000);
+    tournamentTokenTimer->setInterval(60*1000);
+    QTimer *tournamentListTokenTimer = new QTimer(&app);
+    tournamentTokenTimer->start();
+    tournamentListTokenTimer->start();
+    TokenContainer *tournamentToken = new TokenContainer(&app,*tournamentTokenTimer,1,1);
+    TokenContainer *tournamentListToken = new TokenContainer(&app,*tournamentListTokenTimer,1,1);
+
+    Chess24Manager *c24Manager = new Chess24Manager(&app,*c24ws,*c24Sql,*tsm,*rsm,*lsm,*tournamentToken,*tournamentListToken);
 
     //Get the tournament details when select a new tournament
-    //QObject::connect(tvm,&TournamentViewModel::currentTournamentChanged,tm,&TournamentsModel::onCurrentTournamentChanged);
-    QObject::connect(tsm,&TournamentsSqlModel::currentIndexChanged,c24Sql,&Chess24SqlHandler::onCurrentTournamentChanged);
-
-    //Asumes that everytime someone calls Chess24Manager.getTournaments we want to update the model
-    QObject::connect(c24Manager,&Chess24Manager::gotTournaments,c24Sql,&Chess24SqlHandler::addTournaments);
-    QObject::connect(c24Manager,&Chess24Manager::gotTournamentDetails,c24Sql,&Chess24SqlHandler::updateTournamentDetails);
+    QObject::connect(tsm,&TournamentsSqlModel::currentIndexChanged,c24Manager,&Chess24Manager::onCurrentTournamentChanged);
+    QObject::connect(parser,&Chess24MessageParser::webTournamentRedisAR,c24Sql,&Chess24SqlHandler::onWebTournamentRedisAR);
 
     QMetaObject::Connection onConnectedCon;
 
@@ -95,10 +123,11 @@ int main(int argc, char *argv[])
     if(!tourUpdated.isValid() ||//Setting has never been created
             (tourUpdated.isValid() && tourUpdated.daysTo(QDateTime::currentDateTimeUtc())>=1)){//More then one day since last updated tournaments
 
-            //One shot retrieval of data on first start, not particularly elegant since depends on onConnectedCon alive on stack
-            onConnectedCon = QObject::connect(c24ws, &Chess24Websocket::connected,[&onConnectedCon,c24Manager](){//When websocket is connected
+        //One shot retrieval of data on first start, not particularly elegant since depends on onConnectedCon alive on stack
+        onConnectedCon = QObject::connect(c24ws, &Chess24Websocket::connected,[&onConnectedCon,c24Manager](){//When websocket is connected
             QObject::disconnect(onConnectedCon);//Only want to react once
-            c24Manager->getTournaments();});
+            c24Manager->refreshTournamentList();
+        });
     }
 
     QObject::connect(chess24Login,&Chess24Login::loggedInChanged,c24ws,&Chess24Websocket::onLoggedInChanged);
@@ -107,9 +136,8 @@ int main(int argc, char *argv[])
     QQmlApplicationEngine engine;
     engine.rootContext()->setContextProperty("chess24Login",chess24Login);
     engine.rootContext()->setContextProperty("tournamentsSqlModel",tsm);
-    /*engine.rootContext()->setContextProperty("tournamentViewModel",tvm);
-    engine.rootContext()->setContextProperty("roundsModel",rm);
-    engine.rootContext()->setContextProperty("matchesModel",mv);*/
+    engine.rootContext()->setContextProperty("roundSqlModel",rsm);
+    engine.rootContext()->setContextProperty("matchSqlModel",lsm);
     engine.rootContext()->setContextProperty("c24Manager",c24Manager);
     engine.load(QUrl(QLatin1String("qrc:/main.qml")));
 
@@ -117,15 +145,15 @@ int main(int argc, char *argv[])
     QVariantList tournaments = Chess24Messages::tournamentNamesFromJSON(dat);
     tm->addTournaments(tournaments);*/
 
-//    qDebug() << "After adding";
+    //    qDebug() << "After adding";
 
-//    QTimer *timer = new QTimer(&app);
-//    timer->setSingleShot(true);
-//    timer->setInterval(2000);
+    //    QTimer *timer = new QTimer(&app);
+    //    timer->setSingleShot(true);
+    //    timer->setInterval(2000);
 
-//    QObject::connect(timer,&QTimer::timeout,[tvm](){
-//        tvm->sort(0);
-//    //});
+    //    QObject::connect(timer,&QTimer::timeout,[tvm](){
+    //        tvm->sort(0);
+    //    //});
 
     //timer->start();
 

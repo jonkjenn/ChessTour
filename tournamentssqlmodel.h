@@ -10,18 +10,21 @@ public:
     TournamentsSqlModel(QObject *parent,QSqlDatabase database);
 
     QVariant data(const QModelIndex &index, int role) const override;
+    QVariant data(int row, QString columnName) const;
+
     bool setData(const QModelIndex &index, const QVariant &value, int role) override;
     QHash<int, QByteArray> roleNames() const override;
 
     void forceRefresh();
 
     int getRow(int primaryKey);
-    int getPk(int row);
-
+    Q_INVOKABLE int getPk(int row);
     Q_INVOKABLE void setCurrentIndex(int row);
 
+    bool setData(int row, QString column, const QVariant &value);
 signals:
     void currentIndexChanged(int row);
+    void currentPKChanged(int pk);
 
 private:
     QSqlDatabase database;

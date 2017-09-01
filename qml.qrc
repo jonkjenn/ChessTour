@@ -2,5 +2,14 @@
     <qresource prefix="/">
         <file>main.qml</file>
         <file>qtquickcontrols2.conf</file>
+        <file>TournamentList.qml</file>
+        <file>TournamentListView.qml</file>
+        <file>+material/TournamentListView.qml</file>
+        <file>RoundList.qml</file>
+        <file>MatchList.qml</file>
+        <file>dummydata/roundSqlModel.qml</file>
+        <file>ColumnLabel.qml</file>
+        <file>NameColumnLabel.qml</file>
+        <file>MatchTable.qml</file>
     </qresource>
 </RCC>

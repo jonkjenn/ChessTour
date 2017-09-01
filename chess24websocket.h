@@ -8,6 +8,8 @@
 #include <QAbstractSocket>
 #include <QMap>
 
+#include <QQueue>
+#include <QTimer>
 #include <memory>
 
 #include "wsrequest.h"
@@ -44,6 +46,7 @@ public:
      void sendMessage(QString msg);
 
      int increaseAndGetMessageId();
+     void send();
 signals:
      void connected();
      void messageReceived(QString);
@@ -51,6 +54,13 @@ public slots:
      void onLoggedInChanged();
 
 private:
+     QTimer tokenTimer;
+     QTimer msgQTimer;
+     int maxTokens = 2;
+     int tokens = 2;
+     QQueue<QString> msgQ;
+     bool loggedIn = false;
+
     int messageId();
     const QNetworkAccessManager &qnam;
     UserData userData;
