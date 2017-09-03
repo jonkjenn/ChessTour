@@ -59,6 +59,7 @@ void Chess24Manager::getTournamentList(){
         qDebug() << "Got tournament list";
         QVariantList tournaments = Chess24Messages::tournamentNamesFromJSON(data);
         sqlHandler.addTournaments(tournaments);
+        tsm.forceRefresh();
     });
 }
 
@@ -94,7 +95,7 @@ void Chess24Manager::onCurrentTournamentChanged(int row){
     subscribeTournament(name);
     qDebug() << "Subscribe to " << name;
 
-    QDateTime lastUpdated = sqlHandler.lastUpdated(row);
+    QDateTime lastUpdated = sqlHandler.lastUpdated(row,tsm.getPk(row));
 
     if(lastUpdated.isValid()){
         //Don't automatically update tournaments which already has been updated the last day

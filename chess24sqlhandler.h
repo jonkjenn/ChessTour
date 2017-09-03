@@ -17,8 +17,8 @@ class Chess24SqlHandler:public QObject
 {
     Q_OBJECT
 public:
-    Chess24SqlHandler(QObject *parent, TournamentsSqlModel &tsm, RoundsSqlModel &rsm,LiveMatchSqlModel &lsm);
     void updateTournamentDetails(QJsonObject json);
+    Chess24SqlHandler(QObject *parent);
     bool addTournaments(QVariantList names) ;
     void onWebTournamentRedisAR(WebTournamentRedisAR msg);
     QDateTime lastUpdated(int row);

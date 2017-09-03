@@ -112,7 +112,7 @@ int main(int argc, char *argv[])
 
     LiveMatchSqlModel *lsm = new LiveMatchSqlModel(&app,db);
 
-    Chess24SqlHandler *c24Sql = new Chess24SqlHandler(&app,*tsm,*rsm,*lsm);
+    Chess24SqlHandler *c24Sql = new Chess24SqlHandler(&app);
 
     QTimer *tournamentTokenTimer = new QTimer(&app);
     tournamentTokenTimer->setInterval(60*1000);

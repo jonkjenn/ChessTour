@@ -29,8 +29,8 @@ static QString lastMoves = "lastMoves";
 }
 using namespace std;
 
-Chess24SqlHandler::Chess24SqlHandler(QObject *parent, TournamentsSqlModel &tsm, RoundsSqlModel &rsm, LiveMatchSqlModel &lsm)
-    :QObject(parent),tsm(tsm),rsm(rsm),lsm(lsm)
+Chess24SqlHandler::Chess24SqlHandler(QObject *parent)
+    :QObject(parent)
 {
 }
 
@@ -235,8 +235,7 @@ QVariantMap Chess24SqlHandler::updateTournament(QString name, QVariantMap map, b
     return changes;
 }
 
-QDateTime Chess24SqlHandler::lastUpdated(int row){
-    int pk = tsm.getPk(row);
+QDateTime Chess24SqlHandler::lastUpdated(int row, int pk){
     QSqlQuery checkSql(database);
     checkSql.prepare("SELECT LastUpdated FROM Tournament WHERE Id = :id");
     checkSql.bindValue(":id",pk);
@@ -279,7 +278,6 @@ bool Chess24SqlHandler::addTournaments(QVariantList names)
 
     QSettings settings;
     settings.setValue("database/tournamentUpdated",QDateTime::currentDateTimeUtc());
-    tsm.forceRefresh();
 
     return true;
 }
