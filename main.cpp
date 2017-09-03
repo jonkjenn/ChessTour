@@ -27,10 +27,6 @@
 
 #include "disknetworkcookiejar.h"
 
-/*static QJSValue backendSingleton(QQmlEngine *engine,QJSEngine *jsengine){
-    QJSValue backend = engine->newQObject(new Backend(engine));
-    return backend;
-}*/
 void myMessageOutput(QtMsgType type, const QMessageLogContext &context, const QString &msg)
 {
     QByteArray localMsg = msg.toLocal8Bit();
@@ -61,14 +57,6 @@ using namespace std;
 int main(int argc, char *argv[])
 {
 
-    QJsonParseError error;
-    QJsonDocument doc = QJsonDocument::fromJson(TestData::webTournamentDiff.toUtf8(),&error);
-    QVariant test = doc.toVariant();
-    QVariantMap map = test.toMap();
-
-    QVariantMap result = Chess24Messages::transformWebTournament(map.value("diffs").toMap());
-
-
     qInstallMessageHandler(myMessageOutput);
     QCoreApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
     QCoreApplication::setOrganizationName("Jonkjenn");
@@ -81,7 +69,6 @@ int main(int argc, char *argv[])
     qnam->setCookieJar(jar);
 
     Chess24 *chess24 = new Chess24(&app,*qnam);
-
 
     Chess24MessageParser *parser = new Chess24MessageParser(&app);
 
@@ -99,7 +86,6 @@ int main(int argc, char *argv[])
         qDebug() << "Could not open database";
         return 0;
     }
-
 
     TournamentsSqlModel *tsm = new TournamentsSqlModel(&app,db);
     tsm->setTable("Tournament");
@@ -155,22 +141,6 @@ int main(int argc, char *argv[])
     engine.rootContext()->setContextProperty("matchSqlModel",lsm);
     engine.rootContext()->setContextProperty("c24Manager",c24Manager);
     engine.load(QUrl(QLatin1String("qrc:/main.qml")));
-
-    /*using namespace Chess24Messages;
-    QVariantList tournaments = Chess24Messages::tournamentNamesFromJSON(dat);
-    tm->addTournaments(tournaments);*/
-
-    //    qDebug() << "After adding";
-
-    //    QTimer *timer = new QTimer(&app);
-    //    timer->setSingleShot(true);
-    //    timer->setInterval(2000);
-
-    //    QObject::connect(timer,&QTimer::timeout,[tvm](){
-    //        tvm->sort(0);
-    //    //});
-
-    //timer->start();
 
     return app.exec();
 }
