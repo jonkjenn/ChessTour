@@ -8,7 +8,7 @@
 #include <optional>
 #include <QMap>
 
-#include "chess24manager.h"
+#include "sqlhelper.h"
 
 namespace MStr{//TODO: replace with string literal of some sort
 static QString fullGameRKey = "fullGameRKey";
@@ -27,176 +27,212 @@ static QString currentFen = "currentFen";
 static QString earlierFen = "earlierFen";
 static QString lastMoves = "lastMoves";
 }
+using namespace std;
 
-Chess24SqlHandler::Chess24SqlHandler(QObject *parent, QSqlDatabase database, TournamentsSqlModel &tsm, RoundsSqlModel &rsm, LiveMatchSqlModel &lsm)
-    :QObject(parent),database(database), tsm(tsm),rsm(rsm),lsm(lsm)
+Chess24SqlHandler::Chess24SqlHandler(QObject *parent, TournamentsSqlModel &tsm, RoundsSqlModel &rsm, LiveMatchSqlModel &lsm)
+    :QObject(parent),tsm(tsm),rsm(rsm),lsm(lsm)
 {
-
 }
 
-void Chess24SqlHandler::onWebTournamentRedisAR(WebTournamentRedisAR msg){
-    int tourRow = tsm.getRow(rsm.currentPK());
-    QModelIndex nameIndex = tsm.index(tourRow,tsm.fieldIndex("Name"));
-    QString currentTourName = tsm.data(nameIndex,Qt::DisplayRole).toString();
-    if(msg.tournament != currentTourName){
-        qDebug() << "Got webtourredis for tournament we are not watching, currently watching: " << currentTourName << " in msg: " << msg.tournament;
-        return;
-    }
+QVariantList Chess24SqlHandler::getMatchPks(QVariantList Number, QVariantList GameNumber, int roundPk){
+    QVariantMap whereList;
+    whereList.insert("Number",Number);
+    whereList.insert("GameNumber",GameNumber);
+    QVariantMap values;
+    values.insert("RoundId",roundPk);
+    return SqlHelper::getColumnList(database,"Match","Id",Number.size(),whereList,values);
+}
 
-    if(!msg.args.keys().contains("action")){
-        qDebug() << "No action in msg";
-        return;
-    }
+QVariantList Chess24SqlHandler::insertUpdateMatches(const QVariantList &Number,const QVariantList &GameNumber, const QVariantList &games, const int roundPk,bool returnChanges){
+    QVariantList changes;
 
-    if(msg.args.value("action").toString() != "set"){
-        qDebug() << "Can only handle set action";
-        return;
-    }
+    QVector<QVariant> pkVector = QVector<QVariant>(Number.size(),QVariant::fromValue(roundPk));
+    QVariantList pkList = QList<QVariant>::fromVector(pkVector);
 
-    if(msg.args.keys().contains("diffs")){
-        QJsonObject diffs = msg.args.value("diffs").toObject();
-        if(diffs.keys().contains("rounds")){
-            QJsonObject rounds = diffs.value("rounds").toObject();
-            updateLiveRounds(rounds);
+    database.transaction();
+    SqlHelper::insertLists(database,
+                           "Match",
+                            {Number,GameNumber,pkList},
+                            {"Number", "GameNumber", "RoundId"}
+                           );
+    database.commit();
+
+    QVariantList pks = getMatchPks(Number,GameNumber,roundPk);
+
+    database.transaction();
+    for(int i=0;i<games.size();++i){
+        QVariantMap game = games.at(i).toMap();
+        QVariantMap where;
+        where.insert("Id",pks.at(i));
+        SqlHelper::updateTable(database,"Match",game,where);
+
+        if(returnChanges){
+            QVariantList c;
+            c.append(roundPk);
+            c.append(pks.at(i));
+            for(auto k:game.keys()){
+                c.append(k);
+            }
+            changes.push_back(c);
         }
     }
+    database.commit();
+
+    return changes;
 }
 
-void Chess24SqlHandler::updateLiveRounds(QJsonObject rounds){
-    for(auto roundKey:rounds.keys()){
-        QJsonObject round = rounds.value(roundKey).toObject();
 
-        //Get the Pk for this round from the database
+QVariantMap Chess24SqlHandler::insertUpdateRounds(const QVariantList &Number, const QVariantList &rounds, const int tournamentPk, bool returnChanges){
+
+    QVariantMap changes;
+    QVariantList roundChanges;
+    QVariantList matchChanges;
+
+    QVector<QVariant> pkVector = QVector<QVariant>(Number.size(),QVariant::fromValue(tournamentPk));
+    QVariantList pkList = QList<QVariant>::fromVector(pkVector);
+
+    SqlHelper::insertLists(database,
+                           "Round",
+                           {Number,pkList },
+                            {"Number","TournamentId"}
+                );
+
+    //QVariantList pks = getRoundPk(Number,tournamentPk);
+    QVariantMap lists;
+    lists.insert("Number", Number);
+    QVariantMap vals;
+    vals.insert("TournamentId",tournamentPk);
+    QVariantList pks = SqlHelper::getColumnList(database,"Round","Id",rounds.size(),lists,vals);
+
+    for(int i=0;i<rounds.size();++i){
+        QVariantMap round = rounds.at(i).toMap();
+        QVariantMap where;
+        where.insert("Id",pks.at(i));
+        SqlHelper::updateTable(database,"Round",round,where);
+
+        if(returnChanges){
+            QVariantList c;
+            c.append(pks.at(i));
+            for(auto k:round.keys()){
+                c.append(k);
+            }
+        }
+        QVariantMap matchWrapper = round.value("matchWrapper").toMap();
+
+        QVariantList mc = insertUpdateMatches(
+                    matchWrapper.value("Number").toList(),
+                    matchWrapper.value("GameNumber").toList(),
+                    matchWrapper.value("games").toList(),
+                    pks.at(i).toInt(),
+                    returnChanges
+                    );
+        if(returnChanges){
+            matchChanges.push_back(mc);
+        }
+    }
+    if(returnChanges){
+        changes.insert("round",roundChanges);
+        changes.insert("match",matchChanges);
+        return changes;
+    }
+    return QVariantMap();
+}
+
+void Chess24SqlHandler::insertUpdatePlayers(QVariantList Name, QVariantList FideId){
+    QSqlQuery q(database);
+    q.prepare("insert or ignore into Players (Name, FideId) values (?,?)");
+    q.addBindValue(Name);
+    q.addBindValue(FideId);
+    if(!q.execBatch()){qDebug() << q.lastError();}
+}
+
+optional<int> Chess24SqlHandler::getGamePk(QString number, QString gameNumber, int roundId){
+    QSqlQuery q(database);
+     q.prepare("select Id from Match where Number = ? and GameNumber = ? and RoundId = ?");
+     q.addBindValue(number);
+     q.addBindValue(gameNumber);
+     q.addBindValue(roundId);
+     if(!q.exec()){qDebug() << q.lastError();}
+     if(q.next()){
+         return q.value(0).toInt();
+     }
+     return {};
+}
+
+
+QVariantList Chess24SqlHandler::getRoundPk(QVariantList number, int tournamentId){
+    QVariantList pks;
+    for(auto n:number){
         QSqlQuery q(database);
-        q.prepare("SELECT Id FROM Round WHERE Number = :number AND TournamentId = :tournamentId");
-        q.bindValue(":number",roundKey.toInt());
-        q.bindValue(":tournamentId",rsm.currentPK());
-        q.exec();
-        if(!q.next()){qDebug() << "Could not find pk"; continue;}
-
-        int roundPk = q.value(0).toInt();
-
-        if(round.keys().contains("matches")){
-            QJsonObject matches = round.value("matches").toObject();
-            updateLiveMatches(matches,roundPk);
+        q.prepare("select Id from Round where Number = ? and TournamentId = ?");
+        q.addBindValue(n);
+        q.addBindValue(tournamentId);
+        if(!q.exec()){qDebug() << q.lastError();}
+        if(q.next()){
+            pks.append(q.value(0));
         }
     }
+    return pks;
 }
 
-void Chess24SqlHandler::updateLiveMatches(QJsonObject matches,int roundPk){
-
-    for(auto matchKey:matches.keys()){
-        QJsonObject match = matches.value(matchKey).toObject();
-        if(match.keys().contains("games")){
-            QJsonObject games = match.value("games").toObject();
-            for(auto gameKey:games.keys()){
-                QJsonObject game = games.value(gameKey).toObject();
-                int matchNumber = matchKey.toInt();
-                int gameNumber = gameKey.toInt();
-
-                updateLiveGame(matchNumber,gameNumber,game,roundPk);
-            }
-        }
-    }
-}
-
-//Set data in MatchModel only
-void Chess24SqlHandler::setData(QMap<QString,QVariant> &updates, int rowId,QString column,QVariant value){
-    updates.insert(column,value);
-    lsm.setData(rowId,column,value);
-}
-
-void Chess24SqlHandler::updateLiveGame(int matchNumber, int gameNumber, QJsonObject game, int roundPk){
-    //If this round is the current shown round,
-    //update model if true, update database if false.
-    bool live = roundPk == lsm.currentPk();
-    //Get Pk for match/game combo
+optional<int> Chess24SqlHandler::getRoundPk(QString number, int tournamentId){
     QSqlQuery q(database);
-    q.prepare("SELECT Id FROM Match WHERE Number = :matchNumber AND GameNumber = :gameNumber AND RoundId = :roundId");
-    q.bindValue(":matchNumber",matchNumber);
-    q.bindValue(":gameNumber",gameNumber);
-    q.bindValue(":roundId",roundPk);
-    q.exec();
-
-    if(!q.next()){ qDebug() << "Could not find PK for match/game"; return;}
-    int rowId = q.value(0).toInt();
-
-    //Key is column, Value is value, each element gets added to a SQL call
-    QMap<QString,QVariant> u;
-
-    QJsonObject root = game;
-    QVariantMap valid;
-    QVariantMap engine;
-    engine.insert("score","EngineScore");
-    engine.insert("mate","EngineMate");
-    valid.insert("engine",engine);
-
-    QVariantMap player;
-    player.insert("black","BlackFide");
-    player.insert("white","WhiteFide");
-    valid.insert("player",player);
-
-    QVariantMap gameStatus;
-    QVariantMap result;
-    result.insert("white", "ResultWhite");
-    result.insert("black", "ResultBlack");
-    gameStatus.insert("result",result);
-    gameStatus.insert("status","Status");
-
-    valid.insert("gameStatus",gameStatus);
-
-    valid.insert("currentFen","CurrentFEN");
-    valid.insert("earlierFen","EarlierFEN");
-
-    parseSubtree(u,valid,root);
-
-    if(live){
-        updateLiveGameFromUpdates(u,rowId);
-    }else{
-        updateDbGameFromUpdates(u,matchNumber,gameNumber,roundPk);
-    }
+     q.prepare("select Id from Round where Number = ? and TournamentId = ?");
+     q.addBindValue(number);
+     q.addBindValue(tournamentId);
+     if(!q.exec()){qDebug() << q.lastError();}
+     if(q.next()){
+         return q.value(0).toInt();
+     }
+     return {};
 }
 
-void Chess24SqlHandler::updateDbGameFromUpdates(const QMap<QString,QVariant> &updates, int matchNumber, int gameNumber, int roundPk){
+optional<int> Chess24SqlHandler::getTournamentPk(QString name){
     QSqlQuery q(database);
-    QString sql("UPDATE Match SET ");
-    for(auto key:updates.keys()){
-        sql.append(" " + key + " = :" + key + ",");
-    }
-    sql.remove(sql.length()-1,1);//Remove last ,
-    sql.append(" WHERE Number = :number AND GameNumber = :gameNumber AND RoundId = :roundId");
-    q.prepare(sql);
-    for(auto key:updates.keys()){
-        q.bindValue(":"+key,updates.value(key));
-    }
-    q.bindValue(":number",matchNumber);
-    q.bindValue(":gameNumber",gameNumber);
-    q.bindValue(":roundId",roundPk);
-    if(!q.exec()){
-        qDebug() << q.lastError();
-        qDebug() << q.lastQuery();
-    }
+     q.prepare("select Id from Tournament where Name = ?");
+     q.addBindValue(name);
+     if(!q.exec()){qDebug() << q.lastError();}
+     if(q.next()){
+         return q.value(0).toInt();
+     }
+     return {};
 }
 
-void Chess24SqlHandler::updateLiveGameFromUpdates(const QMap<QString,QVariant> &updates,int rowId){
-    for(auto key:updates.keys()){
-        lsm.setData(rowId,key,updates.value(key));
-        //msm.setDataNoDataChanged(rowId,key,updates.value(key));
-    }
-}
+QVariantMap Chess24SqlHandler::updateTournament(QString name, QVariantMap map, bool returnChanges){
+    QVariantMap changes;
 
-//Recursively add to list of updates based on the valid attributes in valid map
-void Chess24SqlHandler::parseSubtree(QMap<QString,QVariant> &updates,const QVariantMap &valid,const QJsonObject &root){
-    for(auto key:root.keys()){
-        if(valid.contains(key)){
-            if(valid.value(key).type() == QVariant::Type::Map){
-                parseSubtree(updates,valid.value(key).toMap(),root.value(key).toObject());
-            }else{
-                //Use the corrected column name from valid map
-                updates.insert(valid.value(key).toString(),root.value(key).toVariant());
-            }
+    optional<int> tournamentPk = getTournamentPk(name);
+    if(!tournamentPk){return changes;}
+
+    if(map.keys().contains("players")){
+        QVariantMap playerWrapper = map.value("players").toMap();
+        insertUpdatePlayers(playerWrapper.value("Name").toList(),playerWrapper.value("FideId").toList());
+    }
+    if(map.keys().contains("roundWrapper")){
+        QVariantMap roundWrapper = map.value("roundWrapper").toMap();
+        changes = insertUpdateRounds(roundWrapper.value("Number").toList(),roundWrapper.value("rounds").toList(),tournamentPk.value(),returnChanges);
+    }
+
+    QVariantMap where;
+    where.insert("Id",tournamentPk.value());
+    SqlHelper::updateTable(database,"Tournament",map,where);
+
+    if(returnChanges){
+        changes.insert("TournamentPk",tournamentPk.value());
+        QVariantList c;
+        for(auto k:map.keys()){
+            c.append(k);
         }
+        changes.insert("tournament",c);
     }
+
+    QSqlQuery lastSql(database);
+    lastSql.prepare("UPDATE Tournament SET LastUpdated = :lastUpdated WHERE Id = :id");
+    lastSql.bindValue(":lastUpdated",QDateTime::currentDateTimeUtc().toString());
+    lastSql.bindValue(":id",tournamentPk.value());
+    lastSql.exec();
+
+    return changes;
 }
 
 QDateTime Chess24SqlHandler::lastUpdated(int row){
@@ -211,18 +247,17 @@ QDateTime Chess24SqlHandler::lastUpdated(int row){
 
 bool Chess24SqlHandler::addTournaments(QVariantList names)
 {
+
     database.transaction();
-    //query.addBindValue(order);
+    QSqlQuery query(database);
+    query.prepare("INSERT OR IGNORE INTO Tournament (Name) VALUES (:names)");
+    query.bindValue(":names",names);
 
-        QSqlQuery query(database);
-        query.prepare("INSERT OR IGNORE INTO Tournament (Name) VALUES (?)");
-        query.addBindValue(names);
-
-        if(!query.execBatch()){
-            qDebug() << query.lastError();
-            database.rollback();
-            return false;
-        }
+    if(!query.execBatch()){
+        qDebug() << query.lastError();
+        qDebug() << query.lastQuery();
+        return false;
+    }
     database.commit();
 
     database.transaction();
@@ -247,251 +282,4 @@ bool Chess24SqlHandler::addTournaments(QVariantList names)
     tsm.forceRefresh();
 
     return true;
-}
-
-void Chess24SqlHandler::updatePlayers( QJsonObject &players) {
-    database.transaction();
-    QSqlQuery q(database);
-    q.prepare("INSERT OR IGNORE INTO Players (FideId,Name) VALUES (?,?);");
-    QVariantList fideIds;
-    QVariantList names;
-    for(auto p:players){
-        if(!p.isObject()){
-            qDebug() << "Could not parse players, wrong json format.";
-            return;
-        }//TODO: better error handling
-        QJsonObject player = p.toObject();
-        if(!(player.keys().contains("fideId") && player.keys().contains("name"))){
-            qDebug() << "Could not parse players, wrong json format.";
-            continue;
-        }
-        QString fideId = player["fideId"].toString();
-        fideIds.append(fideId);
-        QString playerName = player["name"].toString();
-        names.append(playerName);
-    }
-    if(fideIds.size() != names.size()){
-        database.rollback();
-        return;
-    }
-    q.addBindValue(fideIds);
-    q.addBindValue(names);
-    q.execBatch();
-    database.commit();
-}
-
-void Chess24SqlHandler::updateTournamentDetails(QJsonObject json)
-{
-    if(!json.contains("id")){
-        return;
-    }
-    QString name = json["id"].toString();
-    QSqlQuery pkSql(database);
-    pkSql.prepare("SELECT Id FROM Tournament WHERE Name = :name");
-    pkSql.bindValue(":name",name);
-    pkSql.exec();
-    if(!pkSql.next()){ qDebug() << "Could not retrieve primary key for tournament: " << name; qDebug() << pkSql.lastError();}
-    int tournamentPk = pkSql.value(0).toInt();
-    int row = tsm.getRow(tournamentPk);
-    bool updated = false;
-
-    if(json.keys().contains("titles")){
-        QJsonObject titles = json.value("titles").toObject();
-        if(titles.keys().contains("en")){
-            tsm.setData(row,"Title",titles.value("en").toString());
-        }
-    }
-
-    if(json.keys().contains("currentRound")){
-        tsm.setData(row,"CurrentRound",json.value("currentRound").toInt());
-    }
-
-    if(!json.keys().contains("players")){
-        qDebug() << "Could not find players, wrong json format.";
-        return;
-    }
-
-    QJsonObject players = json["players"].toObject();
-    updatePlayers(players);
-
-    if(json.keys().contains("status")){
-        tsm.setData(tsm.index(row,tsm.fieldIndex("Status")),json["status"].toString(),Qt::EditRole);
-        updated = true;
-    }
-
-    if(json.keys().contains("eventType")){
-        tsm.setData(tsm.index(row,tsm.fieldIndex("EventType")),json["eventType"].toString(),Qt::EditRole);
-        updated = true;
-    }
-
-    if(json.keys().contains("rounds")){
-        QJsonObject rounds = json["rounds"].toObject();
-        updated = updateRounds(rounds,tournamentPk);
-    }
-
-    if(updated){
-        QSqlQuery lastSql(database);
-        lastSql.prepare("UPDATE Tournament SET LastUpdated = :lastUpdated WHERE Id = :id");
-        lastSql.bindValue(":lastUpdated",QDateTime::currentDateTimeUtc().toString());
-        lastSql.bindValue(":id",tournamentPk);
-        lastSql.exec();
-
-        tsm.forceRefresh();
-        rsm.forceRefresh();
-        int roundPk = rsm.getPk(rsm.currentShownRound());
-        qDebug() << "roundPk" << roundPk;
-        lsm.setRound(roundPk);
-    }
-}
-
-bool Chess24SqlHandler::updateRounds(QJsonObject rounds,int tournamentPk){
-
-    bool updated = false;
-    for(auto roundKey:rounds.keys()){
-        QJsonObject round = rounds[roundKey].toObject();
-        int number = roundKey.toInt();//TODO:error handling
-        QSqlQuery roundPk(database);//Could also just insert since will override if exist
-        roundPk.prepare("SELECT Id FROM Round WHERE TournamentId = :tournamentId AND Number = :number");
-        roundPk.bindValue(":tournamentId",tournamentPk);
-        roundPk.bindValue(":number",number);
-        roundPk.exec();
-
-        int pk = -1;
-        if(!roundPk.next()){//Insert round
-            roundPk.clear();
-            QSqlQuery insertRound(database);
-            insertRound.prepare("INSERT INTO Round (TournamentId,Number) VALUES (:tournamentId,:number)");
-            insertRound.bindValue(":tournamentId",tournamentPk);
-            insertRound.bindValue(":number",number);
-            insertRound.exec();
-            pk = insertRound.lastInsertId().toInt();
-            updated = true;
-        }else{
-            pk = roundPk.value(0).toInt();
-        }
-        if(round.keys().contains("startDate")){
-            QSqlQuery q(database);
-            q.prepare("UPDATE Round SET StartDate = :startDate WHERE TournamentId = :tournamentId and Id = :id");
-            q.bindValue(":startDate",round.value("startDate").toString());
-            q.bindValue(":tournamentId",tournamentPk);
-            q.bindValue(":id",pk);
-            q.exec();
-            if(!q.exec()){
-                qDebug() << "Could not update startdate";
-            }
-        }
-
-        Q_ASSERT(pk >= 0);
-
-        QJsonObject matches = round["matches"].toObject();
-        //.value("1").toObject()
-        //.value("games").toObject();
-
-        updateMatches(matches,pk);
-        updated = updated || updateMatches(matches,pk);
-    }
-    return updated;
-}
-
-std::optional<int> Chess24SqlHandler::getInt(QJsonObject source, QString key)
-{
-    if(source.keys().contains(key)){
-        return source[key].toInt();
-    }
-    return {};
-}
-
-std::optional<QVariant> Chess24SqlHandler::getString(QJsonObject source, QString key)
-{
-    if(source.keys().contains(key)){
-        return source[key].toVariant();
-    }
-    return {};
-}
-
-bool Chess24SqlHandler::updateMatches(QJsonObject matches,int roundPk){
-    bool updated = false;
-    QSqlQuery deleteMatches(database);
-    deleteMatches.prepare("DELETE FROM Match WHERE RoundId = :roundId");
-    deleteMatches.bindValue(":roundId",roundPk);
-    deleteMatches.exec();
-
-    database.transaction();
-    for(auto matchKey:matches.keys()){
-        int matchNumber = matchKey.toInt();
-
-        //  			      				"matches": {
-        //  .toObject()						   		"1": {
-        //	.value(games).toObject()				"games": {
-        QJsonObject games = matches[matchKey].toObject()
-                .value(MStr::games).toObject();
-
-
-        for(auto gameKey:games.keys()){
-
-            auto game = games[gameKey].toObject();
-
-            int gameNumber = gameKey.toInt();
-            QVariant fullGameRKey = getString(game,MStr::fullGameRKey).value_or("");
-            QVariant status;
-            QVariant whiteFide = 0;
-            QVariant blackFide = 0;
-            QVariant resultWhite = QVariant(QVariant::String);
-            QVariant resultBlack = QVariant(QVariant::String);
-            QVariant currentFen = getString(game,MStr::currentFen).value_or("");
-            QVariant earlierFen = getString(game,MStr::earlierFen).value_or("");
-            QVariant lastMoves = QVariant(QVariant::String);
-
-            if(game.keys().contains(MStr::player)){
-                whiteFide = game.value(MStr::player).toObject().value(MStr::white).toString();
-                blackFide = game.value(MStr::player).toObject().value(MStr::black).toString();
-            }else{
-                //Need to have players in a game
-                continue;
-            }
-
-            /*"gameStatus": {
-              "result": {
-                "white": 1,
-                "black": 0
-              },
-              "status": "finished"
-            }*/
-            if(game.keys().contains(MStr::gameStatus)){
-                auto gameStatusObj = game[MStr::gameStatus].toObject();
-                if(gameStatusObj.keys().contains(MStr::result)){
-                    auto resultObj = gameStatusObj[MStr::result].toObject();
-                    resultWhite = getString(resultObj,MStr::white).value_or(QVariant(QVariant::String));
-                    resultBlack = getString(resultObj,MStr::black).value_or(QVariant(QVariant::String));
-                }
-                status = getString(gameStatusObj,MStr::status).value_or("");
-            }
-
-            QSqlQuery insertMatch(database);
-            insertMatch.prepare("INSERT INTO Match "
-                                "(WhiteFide, BlackFide, Number, GameNumber, FullGameRKey, RoundId,  ResultWhite,  ResultBlack,  CurrentFEN, EarlierFEN, Status) "
-                                "VALUES (:whiteFide, :blackFide,:number,:gameNumber,:fullGameRKey,:roundId, :resultWhite, :resultBlack, :currentFEN, :earlierFEN,:status)");
-            insertMatch.bindValue(":whiteFide",whiteFide);
-            insertMatch.bindValue(":blackFide",blackFide);
-            insertMatch.bindValue(":number",matchNumber);
-            insertMatch.bindValue(":gameNumber",gameNumber);
-            insertMatch.bindValue(":fullGameRKey",fullGameRKey);
-            insertMatch.bindValue(":roundId",roundPk);
-            insertMatch.bindValue(":resultWhite",resultWhite);
-            insertMatch.bindValue(":resultBlack",resultBlack);
-            insertMatch.bindValue(":currentFEN",currentFen);
-            insertMatch.bindValue(":earlierFEN",earlierFen);
-            insertMatch.bindValue(":status",status);
-            insertMatch.exec();
-            if(insertMatch.lastError().isValid()){
-                qDebug() << insertMatch.lastError();
-                qDebug() << insertMatch.lastQuery();
-            }else{
-                updated = true;
-            }
-        }
-
-    }
-    database.commit();
-    return updated;
 }

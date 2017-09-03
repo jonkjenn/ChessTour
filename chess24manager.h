@@ -12,6 +12,7 @@
 #include "roundssqlmodel.h"
 #include "livematchsqlmodel.h"
 #include "tokencontainer.h"
+#include "chess24messageparser.h"
 
 class Chess24Websocket;
 class Chess24SqlHandler;
@@ -20,6 +21,8 @@ class WSRequest;
 class Chess24Manager: public QObject
 {
     Q_OBJECT
+    Q_PROPERTY(bool canRefreshTournamentList READ canRefreshTournamentList NOTIFY canRefreshTournamentListChanged)
+    Q_PROPERTY(bool canRefreshTournament READ canRefreshTournament NOTIFY canRefreshTournamentChanged)
 public:
     Chess24Manager(QObject *parent, Chess24Websocket &c24ws, Chess24SqlHandler &sqlHandler,
                    TournamentsSqlModel &tsm, RoundsSqlModel &rsm, LiveMatchSqlModel &lsm,
@@ -30,8 +33,16 @@ public:
     bool canRequestTournaments() const;
     TokenContainer &tournamentToken;
     TokenContainer &tournamentListToken;
-    void refreshTournament(int rowId);
-    void refreshTournamentList();
+    Q_INVOKABLE void refreshTournament(int rowId);
+    Q_INVOKABLE void refreshTournamentList();
+
+    bool canRefreshTournamentList() const;
+    bool canRefreshTournament() const;
+    void onWebTournamentRedisAR(WebTournamentRedisAR msg);
+
+signals:
+    void canRefreshTournamentListChanged(bool canRefreshTournamentList);
+    void canRefreshTournamentChanged(bool canRefreshTournament);
 
 private:
     Chess24Websocket &c24ws;
@@ -44,5 +55,7 @@ private:
     void getTournament(QString name);
     void getTournamentList();
 };
+
+
 
 #endif // CHESS24MANAGER_H

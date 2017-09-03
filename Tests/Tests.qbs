@@ -22,7 +22,14 @@ Project{
             "../chess24messages.h",
             "../tokencontainer.cpp",
             "../tokencontainer.h",
+            "../sqlhelper.h",
+            "../sqlhelper.cpp"
         ]
+
+    Group {     // Properties for the produced executable
+        fileTagsFilter: product.type
+        qbs.install: true
+    }
 
     }
 }

@@ -18,6 +18,26 @@ LiveMatchSqlModel::LiveMatchSqlModel(QObject *parent, QSqlDatabase &database):QA
     }
 }
 
+void LiveMatchSqlModel::possibleUpdates(const QVariantList &lists){
+    for(auto l:lists){
+        for(auto ml:l.toList()){
+        QVariantList li = ml.toList();
+        if(li.at(0).toInt() == currentPk()){
+            int row = pkToRow.value(li.at(1).toInt());
+            QVector<int> roles;
+            for(int i=1;i<li.size();++i){
+                if(columnToRoleId.contains(li.at(i).toString())){
+                    roles.append(columnToRoleId.value(li.at(i).toString()));
+                }
+            }
+            emit dataChanged(index(row),index(row),roles);
+        }else{
+            break;
+        }
+        }
+    }
+}
+
 int LiveMatchSqlModel::rowCount(const QModelIndex &parent) const
 {
     return m_rowCount;
@@ -40,7 +60,7 @@ QVariant LiveMatchSqlModel::data(const QModelIndex &index, int role) const
     if(q.lastError().isValid()){qDebug() << q.lastError();}
 
     if(!q.next()){
-        return QVariant();
+        return "";
     }
 
     if(q.isNull(0)){
@@ -83,8 +103,10 @@ void LiveMatchSqlModel::setRound(int pk){
     q.exec();
     int i=0;
     rowToPk.clear();
+    pkToRow.clear();
     while(q.next()){
         rowToPk.insert(i,q.value(0).toInt());
+        pkToRow.insert(q.value(0).toInt(),i);
         ++i;
     }
     m_rowCount = rowToPk.size();

@@ -20,6 +20,7 @@ public:
 
     Q_INVOKABLE void setRound(int pk);
     int currentPk();
+    void possibleUpdates(const QVariantList &map);
 private:
     QSqlDatabase &database;
     int m_rowCount = 0;
@@ -28,6 +29,7 @@ private:
     QHash<int, QString> roleIdToColumn;
     QHash<QString, int> columnToRoleId;
     QHash<int,int> rowToPk;
+    QHash<int,int> pkToRow;
 };
 
 #endif // LIVEMATCHSQLMODEL_H

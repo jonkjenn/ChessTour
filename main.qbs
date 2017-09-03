@@ -85,6 +85,8 @@ CppApplication {
         "qml.qrc",
         "roundssqlmodel.cpp",
         "roundssqlmodel.h",
+        "sqlhelper.cpp",
+        "sqlhelper.h",
         "tokencontainer.cpp",
         "tokencontainer.h",
         "tournamentssqlmodel.cpp",

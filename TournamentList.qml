@@ -20,7 +20,7 @@ TournamentListView{
         highlighted: index === tournamentsList.currentIndex
 
         contentItem: Text{
-            text: name
+            text: title==""?name:title
             color: control.Material.foreground
             wrapMode: Text.WordWrap
         }

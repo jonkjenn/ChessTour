@@ -53,10 +53,22 @@ void myMessageOutput(QtMsgType type, const QMessageLogContext &context, const QS
     }
 }
 
+
 using namespace std;
 
+#include <QJsonDocument>
+#include "Tests/testdata.h"
 int main(int argc, char *argv[])
 {
+
+    QJsonParseError error;
+    QJsonDocument doc = QJsonDocument::fromJson(TestData::webTournamentDiff.toUtf8(),&error);
+    QVariant test = doc.toVariant();
+    QVariantMap map = test.toMap();
+
+    QVariantMap result = Chess24Messages::transformWebTournament(map.value("diffs").toMap());
+
+
     qInstallMessageHandler(myMessageOutput);
     QCoreApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
     QCoreApplication::setOrganizationName("Jonkjenn");
@@ -88,6 +100,7 @@ int main(int argc, char *argv[])
         return 0;
     }
 
+
     TournamentsSqlModel *tsm = new TournamentsSqlModel(&app,db);
     tsm->setTable("Tournament");
     tsm->setEditStrategy(QSqlTableModel::OnFieldChange);
@@ -99,14 +112,16 @@ int main(int argc, char *argv[])
 
     LiveMatchSqlModel *lsm = new LiveMatchSqlModel(&app,db);
 
-    Chess24SqlHandler *c24Sql = new Chess24SqlHandler(&app,db,*tsm,*rsm,*lsm);
+    Chess24SqlHandler *c24Sql = new Chess24SqlHandler(&app,*tsm,*rsm,*lsm);
 
     QTimer *tournamentTokenTimer = new QTimer(&app);
     tournamentTokenTimer->setInterval(60*1000);
-    tournamentTokenTimer->setInterval(60*1000);
-    QTimer *tournamentListTokenTimer = new QTimer(&app);
     tournamentTokenTimer->start();
+
+    QTimer *tournamentListTokenTimer = new QTimer(&app);
+    tournamentListTokenTimer->setInterval(60*1000);
     tournamentListTokenTimer->start();
+
     TokenContainer *tournamentToken = new TokenContainer(&app,*tournamentTokenTimer,1,1);
     TokenContainer *tournamentListToken = new TokenContainer(&app,*tournamentListTokenTimer,1,1);
 
@@ -114,7 +129,7 @@ int main(int argc, char *argv[])
 
     //Get the tournament details when select a new tournament
     QObject::connect(tsm,&TournamentsSqlModel::currentIndexChanged,c24Manager,&Chess24Manager::onCurrentTournamentChanged);
-    QObject::connect(parser,&Chess24MessageParser::webTournamentRedisAR,c24Sql,&Chess24SqlHandler::onWebTournamentRedisAR);
+    QObject::connect(parser,&Chess24MessageParser::webTournamentRedisAR,c24Manager,&Chess24Manager::onWebTournamentRedisAR);
 
     QMetaObject::Connection onConnectedCon;
 

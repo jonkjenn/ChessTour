@@ -37,15 +37,16 @@ import QtQuick.Controls.Material 2.2
                                    return "transparent"
                                }
                         border.width: 2
-                        border.color: if(startdate != ""){
+                        border.color: if(startdate == undefined || startdate == ""){
+                                          return Material.background;
+                                      }else{
+                                          console.log(startdate);
                                           var d = new Date(startdate);
                                           if(d.toDateString() == new Date().toDateString()){
-                                              return "green";
+                                              return "#7af442";
+                                          }else{
+                                              return Material.background;
                                           }
-                                      }
-                                      else{
-                                          return "transparent";
-
                                       }
                     }
 

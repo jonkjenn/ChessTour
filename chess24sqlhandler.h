@@ -17,17 +17,32 @@ class Chess24SqlHandler:public QObject
 {
     Q_OBJECT
 public:
-    Chess24SqlHandler(QObject *parent, QSqlDatabase database, TournamentsSqlModel &tsm, RoundsSqlModel &rsm,LiveMatchSqlModel &lsm);
+    Chess24SqlHandler(QObject *parent, TournamentsSqlModel &tsm, RoundsSqlModel &rsm,LiveMatchSqlModel &lsm);
     void updateTournamentDetails(QJsonObject json);
     bool addTournaments(QVariantList names) ;
     void onWebTournamentRedisAR(WebTournamentRedisAR msg);
     QDateTime lastUpdated(int row);
 
+    bool updateTournament(QString name, QVariantMap map, int currentTourPk, int currentRoundPk);
+    void insertUpdatePlayers(QVariantList Name, QVariantList FideId);
+    std::optional<int> getTournamentPk(QString name);
+    QVariantMap insertUpdateRounds(const QVariantList &Number, const QVariantList &rounds, const int tournamentPk,bool returnChanges=false);
+    std::optional<int> getRoundPk(QString number, int tournamentId);
+    QVariantList insertUpdateMatches(const QVariantList &Number, const QVariantList &GameNumber, const QVariantList &games, const int roundPk, bool returnChanges=false);
+    std::optional<int> getGamePk(QString number, QString gameNumber, int roundId);
+    QVariantList getRoundPk(QVariantList number, int tournamentId);
+    QString updateQueryFromMap(const QVariantMap &map);
+    QVariantMap updateTournament(QString name, QVariantMap map, bool returnChanges = false);
+    void insertLists(const QString table, const QVector<QVariantList> &lists, const QVector<QString> &names);
+    QVariantList getColumnList(QString table, QString column, int listSize, QVariantMap &whereLists, QVariantMap &whereValues);
+    QVariantList getMatchPks(QVariantList Number, QVariantList GameNumber, int roundPk);
+    void updateTable(QString table, const QVariantMap &map, QVariantMap &whereMap);
 private:
-    QSqlDatabase database;
     TournamentsSqlModel &tsm;
     RoundsSqlModel &rsm;
     LiveMatchSqlModel &lsm;
+
+    QSqlDatabase database = QSqlDatabase::database();
 
     void updateMatch(int matchNumber, int gameNumber, QJsonObject data);
     void updateLiveGame(int matchNumber, int gameNumber, QJsonObject game, int roundPk);

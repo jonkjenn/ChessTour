@@ -14,6 +14,12 @@ Chess24Manager::Chess24Manager(QObject *parent, Chess24Websocket &c24ws, Chess24
     tournamentToken(tournamentToken), tournamentListToken(roundToken),
     c24ws(c24ws), sqlHandler(sqlHandler),tsm(tsm),rsm(rsm),lsm(lsm)
 {
+    connect(&tournamentListToken,&TokenContainer::notifyTokenAvailableChanged,[this](bool val){
+        emit canRefreshTournamentListChanged(val);
+    });
+    connect(&tournamentToken,&TokenContainer::notifyTokenAvailableChanged,[this](bool val){
+        emit canRefreshTournamentChanged(val);
+    });
 }
 
 WSRequest *Chess24Manager::sendMessage(std::function<QString(int)> msgFunc){
@@ -34,6 +40,19 @@ void Chess24Manager::refreshTournamentList(){
     }
 }
 
+void Chess24Manager::onWebTournamentRedisAR(WebTournamentRedisAR msg){
+    QVariantMap map = msg.args.toVariantMap();
+    if(map.keys().contains("diffs")){
+        QVariantMap transform = Chess24Messages::transformWebTournament(map.value("diffs").toMap());
+
+        QVariantMap changes = sqlHandler.updateTournament(msg.tournament,transform,true);
+        if(rsm.currentPK() == changes.value("TournamentPk").toInt()){
+            lsm.possibleUpdates(changes.value("match").toList());
+        }
+        //sqlHandler.getPksColumns(msg.tournament,transform,rsm.currentPK(),lsm.currentPk());
+    }
+}
+
 void Chess24Manager::getTournamentList(){
     WSRequest *req = sendMessage(Chess24Messages::getTouramentIds);
     connect(req,&WSRequest::finished,[this](QString data){
@@ -50,7 +69,7 @@ void Chess24Manager::subscribeTournament(QString name)
 
 void Chess24Manager::getTournament(QString name){
     WSRequest *req = sendMessage(Chess24Messages::getWebTournament,name);
-    connect(req,&WSRequest::finished,[this](QString data){
+    connect(req,&WSRequest::finished,[this,name](QString data){
         QJsonDocument doc = QJsonDocument::fromJson(data.toUtf8());
         if(!doc.isArray()){
             return;
@@ -62,7 +81,11 @@ void Chess24Manager::getTournament(QString name){
         if(!arr.at(0).isObject()){
             return;
         }
-        sqlHandler.updateTournamentDetails(arr.at(0).toObject());
+        //sqlHandler.updateTournamentDetails(arr.at(0).toObject());
+        QVariantMap transform = Chess24Messages::transformWebTournament(arr.at(0).toObject().toVariantMap());
+        sqlHandler.updateTournament(name,transform);
+        tsm.forceRefresh();
+        rsm.forceRefresh();
     });
 }
 
@@ -89,4 +112,14 @@ void Chess24Manager::refreshTournament(int row)
         QString name = tsm.data(row,"Name").toString();
         getTournament(name);
     }
+}
+
+bool Chess24Manager::canRefreshTournamentList() const
+{
+    return tournamentListToken.tokenAvailable();
+}
+
+bool Chess24Manager::canRefreshTournament() const
+{
+    return tournamentToken.tokenAvailable();
 }

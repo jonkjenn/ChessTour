@@ -31,12 +31,12 @@ ApplicationWindow {
             }
             Button{
                 anchors.horizontalCenter: parent.horizontalCenter
-                implicitHeight: 30
+                implicitHeight: 50
                 implicitWidth: 90
                 id: control
                 text: qsTr("Refresh")
-                onClicked:c24Manager.onRequestRefreshTournaments()
-                opacity: c24Manager.canRequestTournaments?1:0.3
+                onClicked:c24Manager.refreshTournamentList()
+                opacity: c24Manager.canRefreshTournamentList?1:0.3
             }
 
             TournamentList{
@@ -51,9 +51,19 @@ ApplicationWindow {
             //property var currentIndex
             id:tournamentView
 
-            RoundList{
-                id:roundsView
-                Layout.fillWidth: true
+            RowLayout{
+                RoundList{
+                    id:roundsView
+                    Layout.fillWidth: true
+                }
+                Button{
+                    implicitHeight: 50
+                    implicitWidth: 90
+                    id: button
+                    text: qsTr("Refresh")
+                    onClicked:c24Manager.refreshTournament(tournamentList.currentIndex)
+                    opacity: c24Manager.canRefreshTournament?1:0.3
+                }
             }
 
             /*MatchTable{
@@ -72,6 +82,7 @@ ApplicationWindow {
         visible: !chess24Login.loggedin
         id: loginWrapper
         contentItem:Rectangle{
+            color:Material.background
             implicitWidth: 300
             implicitHeight: 150
             id: loginDialog

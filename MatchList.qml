@@ -66,15 +66,16 @@ ListView{
                 width: 35
             }
             ColumnLabel{
+                property int changes: 0
                 id: engineLabel
                 text:enginemate==""?enginescore/100.0:enginemate
                 color: if(enginemate != ""){
                            return "yellow"
                        }else{
                            if(enginescore>0){
-                               return "green"
+                               return "#adf442"
                            }else if(enginescore == 0){
-                               return "blue"
+                               return "#70d6ff"
                            }else{
                                return "red"
                            }
@@ -85,10 +86,6 @@ ListView{
                     color: "#BEBEBE"
                 }
 
-                onTextChanged:{
-                    console.log("Text changed " + engineLabel.text)
-                    updateHighlight.start()
-                }
                 SequentialAnimation{
                     id: updateHighlight
 
@@ -113,6 +110,14 @@ ListView{
 
 
                 width: 50
+                onTextChanged:{
+                    if(changes>=1){
+                        updateHighlight.start()
+                    }else{
+                        changes = 1;
+                    }
+                }
+
             }
             ColumnLabel{
                 text:status

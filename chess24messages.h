@@ -14,6 +14,13 @@ namespace Chess24Messages
     QVariantList tournamentNamesFromJSON(QString data);
     QString heartBeat();
 
+    void insertFlat(QVariantMap &out, const QVariantMap &root,const QString &name, const QString &column);
+    void insertNest(QVariantMap &out, const QVariantMap &root,const QVector<QString> &name, const QString &column);
+    QVariantMap transformWebTournament(const QVariantMap &root);
+    QVariantMap validWebTournamentGame();
+    void parseSubtree(QMap<QString,QVariant> &updates,const QVariantMap &valid,const QVariantMap &root);
+
+    //QVariantMap validWebTournamentJson();
 
     namespace Helpers{
         const QString model_webTournament = "model:webTournamentRedisAR:";
