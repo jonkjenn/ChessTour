@@ -38,10 +38,8 @@ ListView{
                    }
             border.width: 2
             border.color: if(startdate == undefined || startdate == ""){
-                              console.log("Start date: " + startdate)
                               return Material.background;
                           }else{
-                              console.log("Start date: " + startdate)
                               var d = new Date(startdate);
                               if(d.toDateString() == new Date().toDateString()){
                                   return "#7af442";

@@ -85,7 +85,9 @@ void Chess24Manager::getTournament(InternalMessages::TournamentChangedData data)
         }
         //sqlHandler.updateTournamentDetails(arr.at(0).toObject());
         QVariantMap transform = Chess24Messages::transformWebTournament(arr.at(0).toObject().toVariantMap());
+        qDebug() << "UPDATE TOURNAMENT";
         sqlHandler.updateTournament(data.name,transform);
+        qDebug() << "UPDATE TOURNAMENT COMPLETE";
         emit tournamentLoaded(data);
     });
 }

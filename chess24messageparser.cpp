@@ -51,7 +51,6 @@ void Chess24MessageParser::parseMessage(QString msg)
         return;
     case(MessageType::event):
     {
-        qDebug() << "Event " << msg;
         QString data = getData(msg);
         QJsonDocument doc = QJsonDocument::fromJson(data.toUtf8());
         QJsonObject root = doc.object();
@@ -73,7 +72,6 @@ void Chess24MessageParser::parseMessage(QString msg)
             return;
         }
         QString tournament = model.mid(model.indexOf(":")+1);
-        qDebug() << tournament;
 
         if(!root.keys().contains("args")){
             qDebug() << "Event does not contain args";

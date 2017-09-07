@@ -41,7 +41,11 @@ private slots:
     void test_transformWebTournament();
     void test_getWebTournamentDiffMap();
 
+    //sqlHelper
     void test_sqlHelper();
+    void test_selectWhere();
+    void test_updateTable();
+
 
     void test_tokenContainer();
     //void test_rootTournamentByName();
@@ -355,6 +359,45 @@ void ChessTourTests::test_sqlHelper()
     QVariantList res2 = SqlHelper::getColumnList(db,"Test2","Id",5,whereList,whereValues);
     QCOMPARE(res2.value(0).toInt(),4);
 
+    db.close();
+}
+
+void ChessTourTests::test_selectWhere()
+{
+    QSqlDatabase db = QSqlDatabase::addDatabase("QSQLITE","mycon");
+    db.setDatabaseName(":memory:");
+    db.open();
+    QSqlQuery q("CREATE TABLE Test1 (Id INTEGER PRIMARY KEY AUTOINCREMENT, Value1 TEXT NOT NULL, Value2 STRING NOT NULL);",db);
+    QSqlQuery q2("CREATE TABLE Test2 (Id INTEGER PRIMARY KEY AUTOINCREMENT, Test1Id INTEGER REFERENCES Test1 (Id) ON DELETE CASCADE, Value1 STRING NOT NULL, Value2 INTEGER NOT NULL);",db);
+
+    QVariantList var1 = {"lorem", "ipsum", "dolor", "sit", "amet"};
+    QVariantList var2 = {1, 567, 77, 5, 14};
+    int rows = SqlHelper::insertLists(db,"Test1",{var1,var2},{"Value1", "Value2"});
+
+    //Start tests
+
+    QCOMPARE(SqlHelper::selectWhere(db,"Test1","Value2",{{"Value1","lorem"}}).toInt(),1);
+    QCOMPARE(SqlHelper::selectWhere(db,"Test1","Value2",{{"Value1","sit"}}).toInt(),5);
+    QCOMPARE(SqlHelper::selectWhere(db,"Test1","Value2",{{"Value2",14}}).toInt(),14);
+    QVERIFY(SqlHelper::selectWhere(db,"Test1","Value1",{{"Value2",14}}).toString() == "amet");
+
+    db.close();
+}
+
+void ChessTourTests::test_updateTable()
+{
+    QSqlDatabase::removeDatabase("qt_sql_default_connection");
+    QSqlDatabase db = QSqlDatabase::addDatabase("QSQLITE");
+    db.setDatabaseName(":memory:");
+    db.open();
+    QSqlQuery q("CREATE TABLE Test1 (Id INTEGER PRIMARY KEY AUTOINCREMENT, Value1 TEXT NOT NULL, Value2 STRING NOT NULL);",db);
+    QSqlQuery q2("CREATE TABLE Test2 (Id INTEGER PRIMARY KEY AUTOINCREMENT, Test1Id INTEGER REFERENCES Test1 (Id) ON DELETE CASCADE, Value1 STRING NOT NULL, Value2 INTEGER NOT NULL);",db);
+
+    QVariantList var1 = {"lorem", "ipsum", "dolor", "sit", "amet"};
+    QVariantList var2 = {1, 567, 77, 5, 14};
+    SqlHelper::insertLists(db,"Test1",{var1,var2},{"Value1", "Value2"});
+    SqlHelper::insertLists(db,"Test2",{{1,2,3,4,5},var1,var2},{"Test1Id","Value1", "Value2"});
+
     QVariantMap map;
     map.insert("Value1","test");
     map.insert("Value2",999);
@@ -381,8 +424,14 @@ void ChessTourTests::test_sqlHelper()
     QVERIFY(qs2.value(2) == "12349595.4");
     QCOMPARE(qs2.value(3).toInt(),1);
 
+    SqlHelper::insertLists(db,"Test2",{{"utest"},{377}},{"Value1","Value2"});
+    int i = SqlHelper::updateTable(db,"Test2",{{"Value1","dutest"}},{{"Value1","utest"},{"Value2",377}});
+    qDebug() << i;
 
+    qDebug() << SqlHelper::selectWhere(db,"Test2","Value1",{{"Value2",377}}).toString();
+    QVERIFY(SqlHelper::selectWhere(db,"Test2","Value1",{{"Value2",377}}).toString() == "dutest");
 
+    db.close();
 }
 
 void ChessTourTests::test_getData()

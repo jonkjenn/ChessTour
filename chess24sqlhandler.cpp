@@ -49,34 +49,34 @@ QVariantList Chess24SqlHandler::insertUpdateMatches(const QVariantList &Number,c
     QVector<QVariant> pkVector = QVector<QVariant>(Number.size(),QVariant::fromValue(roundPk));
     QVariantList pkList = QList<QVariant>::fromVector(pkVector);
 
-    database.transaction();
     SqlHelper::insertLists(database,
                            "Match",
                             {Number,GameNumber,pkList},
                             {"Number", "GameNumber", "RoundId"}
                            );
-    database.commit();
 
-    QVariantList pks = getMatchPks(Number,GameNumber,roundPk);
+    //QVariantList pks = getMatchPks(Number,GameNumber,roundPk);
 
-    database.transaction();
     for(int i=0;i<games.size();++i){
         QVariantMap game = games.at(i).toMap();
         QVariantMap where;
-        where.insert("Id",pks.at(i));
+        //where.insert("Id",pks.at(i));
+        where.insert("RoundId",roundPk);
+        where.insert("Number",game.value("Number").toInt());
+        where.insert("GameNumber",game.value("GameNumber").toInt());
         SqlHelper::updateTable(database,"Match",game,where);
 
         if(returnChanges){
             QVariantList c;
             c.append(roundPk);
-            c.append(pks.at(i));
+            c.append(game.value("Number"));
+            c.append(game.value("GameNumber"));
             for(auto k:game.keys()){
                 c.append(k);
             }
             changes.push_back(c);
         }
     }
-    database.commit();
 
     return changes;
 }
@@ -105,6 +105,8 @@ QVariantMap Chess24SqlHandler::insertUpdateRounds(const QVariantList &Number, co
     vals.insert("TournamentId",tournamentPk);
     QVariantList pks = SqlHelper::getColumnList(database,"Round","Id",rounds.size(),lists,vals);
 
+    database.transaction();
+
     for(size_t i=0;i<rounds.keys().size();++i){
         QVariantMap round = rounds.value(rounds.keys().at(i)).toMap();
         QVariantMap where;
@@ -131,6 +133,9 @@ QVariantMap Chess24SqlHandler::insertUpdateRounds(const QVariantList &Number, co
             matchChanges.push_back(mc);
         }
     }
+
+    database.commit();
+
     if(returnChanges){
         changes.insert("round",roundChanges);
         changes.insert("match",matchChanges);
@@ -202,6 +207,8 @@ optional<int> Chess24SqlHandler::getTournamentPk(QString name){
 QVariantMap Chess24SqlHandler::updateTournament(QString name, QVariantMap map, bool returnChanges){
     QVariantMap changes;
 
+    database.transaction();
+
     optional<int> tournamentPk = getTournamentPk(name);
     if(!tournamentPk){return changes;}
 
@@ -232,6 +239,8 @@ QVariantMap Chess24SqlHandler::updateTournament(QString name, QVariantMap map, b
     lastSql.bindValue(":lastUpdated",QDateTime::currentDateTimeUtc().toString());
     lastSql.bindValue(":id",tournamentPk.value());
     lastSql.exec();
+
+    database.commit();
 
     return changes;
 }

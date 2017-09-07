@@ -1,6 +1,6 @@
 import QtQuick 2.0
 
 ColumnLabel {
-    wrapMode: "WordWrap"
+    //wrapMode: "WordWrap"
     horizontalAlignment: "AlignLeft"
 }

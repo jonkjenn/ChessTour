@@ -17,8 +17,25 @@ ApplicationWindow {
         anchors.margins: 10
         implicitWidth: 1024
         implicitHeight: 512
+
+        Item{
+            visible: false
+            id:showButton
+            Layout.maximumWidth: 20
+            width: 20
+        Button{
+            Layout.margins: 0
+            implicitHeight: 40
+            anchors.verticalCenter: parent.verticalCenter
+            x: -implicitWidth/2
+            rotation: 90
+            text:qsTr("Show")
+            onClicked: {tournamentColumn.visible = true;showButton.visible = false;}
+        }
+        }
+
         ColumnLayout{
-            Layout.fillHeight: true
+            id:tournamentColumn
             Item{
                 id: tournmanetListHeader
                 Layout.preferredHeight: 30
@@ -29,14 +46,28 @@ ApplicationWindow {
                     font.bold: true
                 }
             }
+
+            RowLayout{
+                Layout.fillWidth: true
+                Layout.preferredWidth: tournamentList.width
+                implicitHeight: 40
             Button{
-                anchors.horizontalCenter: parent.horizontalCenter
-                implicitHeight: 50
+                implicitHeight: parent.height
                 implicitWidth: 90
                 id: control
                 text: qsTr("Refresh")
                 onClicked:c24Manager.refreshTournamentList()
                 opacity: c24Manager.canRefreshTournamentList?1:0.3
+            }
+
+            Button{
+                implicitHeight: parent.height
+                implicitWidth: 90
+                id: hideButton
+                text: qsTr("Hide")
+                onClicked:{tournamentColumn.visible = false;showButton.visible = true;}
+                anchors.right: parent.right
+            }
             }
 
             TournamentList{
@@ -50,6 +81,12 @@ ApplicationWindow {
             Layout.fillHeight: true
             //property var currentIndex
             id:tournamentView
+
+            Label{
+                id:tournamentNameHeader
+                height: 35
+                width: Layout.fillWidth
+            }
 
             RowLayout{
                 id:roundRow
@@ -90,7 +127,7 @@ ApplicationWindow {
 
                 Label{
                     anchors.verticalCenter: gameSelectView.verticalCenter
-                    text: "Game: "
+                    text: "Games: "
                 }
 
             ListView{
@@ -155,11 +192,11 @@ ApplicationWindow {
                 target:matchSqlModel
                 onCurrentRoundLoaded:{
                     gameSelectView.visible = matchSqlModel.eventType() === "knockout"
-                    console.log(matchSqlModel.eventType());
                     gameSelectModel.clear();
                     for(var i=0;i<matchSqlModel.gamesPerMatch();++i){
                         gameSelectModel.append({"gameNumber":i+1});
                     }
+                    gameSelectList.currentIndex = matchSqlModel.currentGameNumber()-1
                 }
 
             }
@@ -183,7 +220,7 @@ ApplicationWindow {
                     id: username
                     KeyNavigation.tab: password
                     focus: true
-                    placeholderText: "Enter username/email"
+                    placeholderText: "Chess24.com username/email"
                 }
 
                 TextField{
@@ -191,7 +228,7 @@ ApplicationWindow {
                     id: password
                     echoMode: TextField.PasswordEchoOnEdit | null
                     KeyNavigation.tab: username
-                    placeholderText: "Enter password"
+                    placeholderText: "Chess24.com password"
                 }
                 RowLayout{
                     Button{

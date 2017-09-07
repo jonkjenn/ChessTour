@@ -20,7 +20,7 @@ public:
     bool insertRows(int row, int count, const QModelIndex &parent) override;
     QHash<int, QByteArray> roleNames() const override;
 
-    int currentPk();
+    int currentRoundPk();
     void possibleUpdates(const QVariantList &map);
     Q_INVOKABLE QString eventType() const;
     Q_INVOKABLE int gamesPerMatch() const;
@@ -32,9 +32,10 @@ public slots:
     void onCurrentRoundChanged(InternalMessages::RoundChangedData roundData, std::optional<InternalMessages::TournamentChangedData> tournamentData);
 
 private:
+    int rowFromMatchAndGameNumber(int matchNumber, int gameNumber);
     QSqlDatabase &database;
     int m_rowCount = 0;
-    int m_currentPk = -1;
+    int m_currentRoundPk = -1;
     QString m_eventType;
     QHash<int, QByteArray> roles;
     QHash<int, QString> roleIdToColumn;

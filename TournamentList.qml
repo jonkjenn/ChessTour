@@ -35,6 +35,7 @@ TournamentListView{
 
         onClicked: {
             tournamentsList.currentIndex = index
+            tournamentNameHeader.text = (title==""?name:title);
         }
     }
 

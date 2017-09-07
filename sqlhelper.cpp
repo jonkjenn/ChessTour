@@ -64,6 +64,31 @@ QVariant SqlHelper::selectMatchColumn(QSqlDatabase db, int id, QString column)
     return out;
 }
 
+QVariant SqlHelper::selectWhere(QSqlDatabase db, QString table, QString column, QVariantMap where)
+{
+    QSqlQuery q(db);
+
+    QString sql = "select " + column + " from " + table + " ";
+
+    if(where.size()>0){sql.append("where ");}
+
+    for(auto k:where.keys()){
+        sql.append(k + " = :" + k + " ");
+        if(k != where.keys().back()){
+            sql.append("and ");
+        }
+    }
+
+    q.prepare(sql);
+    for(auto k:where.keys()){
+        q.bindValue(":"+k,where.value(k));
+    }
+
+    if(!q.exec()){qDebug() << q.lastError();}
+    if(!q.next()){return QVariant();}
+    return q.value(0);
+}
+
 QVector<int> SqlHelper::selectMatchIds(QSqlDatabase db, int roundPk, std::optional<int> gameNumber)
 {
     QSqlQuery q(db);
@@ -119,25 +144,34 @@ QString SqlHelper::updateQueryFromMap(const QVariantMap &map){
     return sql;
 }
 
-int SqlHelper::updateTable(QSqlDatabase &database, QString table, const QVariantMap &map, QVariantMap &whereMap){
+//
+int SqlHelper::updateTable(QSqlDatabase &database, QString table, const QVariantMap map, const QVariantMap whereMap){
         QSqlQuery update(database);
         QString sql = "update "+ table + " set ";
         sql.append(updateQueryFromMap(map));
         sql.append(" where ");
         for(auto key:whereMap.keys()){
-            sql.append(key + " = :" + key);
+            sql.append(key + " = :w" + key);
+            if(key!=whereMap.keys().back()){
+                sql.append(" and ");
+            }
         }
         //sql.append(" where RoundId = :roundId");
         update.prepare(sql);
+        bool anyValid = false;
         for(auto key:map.keys()){
             if(map.value(key).type() == QVariant::Type::Map){continue;}
             update.bindValue(":" + key,map.value(key));
+            anyValid = true;
+        }
+        if(!anyValid){
+            return 0;
         }
 
         if(update.boundValues().size()==0){return 0 ;}
 
         for(auto key:whereMap.keys()){
-            update.bindValue(":" + key, whereMap.value(key));
+            update.bindValue(":w" + key, whereMap.value(key));
         }
         if(!update.exec()){
             qDebug() << update.lastError();

@@ -19,16 +19,56 @@ LiveMatchSqlModel::LiveMatchSqlModel(QObject *parent, QSqlDatabase &database):QA
     }
 }
 
-void LiveMatchSqlModel::possibleUpdates(const QVariantList &lists){
-    for(auto l:lists){
-        for(auto ml:l.toList()){
-        QVariantList li = ml.toList();
-        if(li.at(0).toInt() == currentPk()){
-            int row = pkToRow.value(li.at(1).toInt());
+void LiveMatchSqlModel::possibleUpdates(const QVariantList &rounds){
+    for(auto round:rounds){
+        for(auto game:round.toList()){
+        QVariantList gameData = game.toList();
+        if(gameData.at(0).toInt() == currentRoundPk()){
+            //int row = pkToRow.value(gameData.at(1).toInt());
+            //int row = 0;//rowFromMatchAndGameNumber(gameData.value(1).toInt(),gameData.value(2).toInt())
+            QVariant matchPk = SqlHelper::selectWhere(database,"Match","Id",{
+                                                 {"RoundId",currentRoundPk()},
+                                                 {"Number",gameData.at(1).toInt()},
+                                                 {"GameNumber",gameData.at(2).toInt()}
+                                             });
+            if(!matchPk.isValid()){qDebug() << "Could not find pk"; continue;}
+            int row = pkToRow.value(matchPk.toInt());
             QVector<int> roles;
-            for(int i=1;i<li.size();++i){
-                if(columnToRoleId.contains(li.at(i).toString())){
-                    roles.append(columnToRoleId.value(li.at(i).toString()));
+            for(int i=1;i<gameData.size();++i){
+                auto role = gameData.at(i).toString();
+                if(columnToRoleId.contains(role)){
+                    roles.append(columnToRoleId.value(role));
+                    if(role == "EngineScore"){
+                        //Since we have dont have access to the currently shown EngineScore in the view,
+                        //a TempEngineScore is used to maintain the columns for the current EngineScore
+                        // and PreviousEngineScore. Same for engine mate.
+
+                        //PreviousScore << TempScore
+                        SqlHelper::updateTable(database,"Match",
+                        {{"PreviousEngineScore",data(index(row),columnToRoleId.value("TempEngineScore"))}}
+                                               ,{{"Id",matchPk.toInt()}});
+
+                        //TempScore << (new)EngineScore
+                        SqlHelper::updateTable(database,"Match",
+                        {{"TempEngineScore",data(index(row),columnToRoleId.value("EngineScore"))}}
+                                               ,{{"Id",matchPk.toInt()}});
+
+                        roles.append(columnToRoleId.value("PreviousEngineScore"));
+                    }
+                    if(role == columnToRoleId.value("EngineMate")){
+
+                        //PreviousScore << TempScore
+                        SqlHelper::updateTable(database,"Match",
+                        {{"PreviousEngineMate",data(index(row),columnToRoleId.value("TempEngineMate"))}}
+                                               ,{{"Id",matchPk.toInt()}});
+
+                        //TempScore << (new)EngineScore
+                        SqlHelper::updateTable(database,"Match",
+                        {{"TempEngineMate",data(index(row),columnToRoleId.value("EngineMate"))}}
+                                               ,{{"Id",matchPk.toInt()}});
+
+                        roles.append(columnToRoleId.value("PreviousEngineMate"));
+                    }
                 }
             }
             emit dataChanged(index(row),index(row),roles);
@@ -53,7 +93,7 @@ void LiveMatchSqlModel::setCurrentGameNumber(int gameNumber)
 {
     beginResetModel();
     m_currentGameNumber = gameNumber;
-    updateData(m_currentPk,m_currentGameNumber);
+    updateData(m_currentRoundPk,m_currentGameNumber);
     endResetModel();
 }
 
@@ -81,13 +121,13 @@ bool LiveMatchSqlModel::setData(int row, QString column, const QVariant &value){
 bool LiveMatchSqlModel::setData(const QModelIndex &index, const QVariant &value, int role)
 {
     int pk = rowToPk.value(index.row());
-    QSqlQuery q(database);
-    qDebug() << "Update Match SET " + roleIdToColumn.value(role) + " = " + value.toString() + "WHERE Id = " + QString::number(pk);
-    q.prepare("UPDATE Match SET " + roleIdToColumn.value(role) + " = :value WHERE Id = :id");
+    //qDebug() << "Update Match SET " + roleIdToColumn.value(role) + " = " + value.toString() + "WHERE Id = " + QString::number(pk);
+    SqlHelper::updateTable(database,"Match",{{roleIdToColumn.value(role),value}},{{"Id",pk}});
+    /*q.prepare("UPDATE Match SET " + roleIdToColumn.value(role) + " = :value WHERE Id = :id");
     //q.bindValue(":column",roleIdToColumn.value(role));
     q.bindValue(":value",value);
     q.bindValue(":id",pk);
-    if(!q.exec()){qDebug() << q.lastError();}
+    if(!q.exec()){qDebug() << q.lastError();}*/
     emit dataChanged(index,index,{role});
 }
 
@@ -117,9 +157,9 @@ void LiveMatchSqlModel::onCurrentRoundChanged(InternalMessages::RoundChangedData
     }
 
     m_gamesPerMatch = roundData.gamesPerMatch;
-    m_currentPk = roundData.pk;
+    m_currentRoundPk = roundData.pk;
 
-    updateData(m_currentPk,gameNumber);
+    updateData(m_currentRoundPk,gameNumber);
 
     endResetModel();
     emit currentRoundLoaded();
@@ -139,7 +179,7 @@ void LiveMatchSqlModel::updateData(int roundPk, std::optional<int> gameNumber){
     m_rowCount = rowToPk.size();
 }
 
-int LiveMatchSqlModel::currentPk()
+int LiveMatchSqlModel::currentRoundPk()
 {
-    return m_currentPk;
+    return m_currentRoundPk;
 }

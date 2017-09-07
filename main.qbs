@@ -6,6 +6,7 @@ CppApplication {
     Depends { name: "Qt.websockets" }
     Depends { name: "Qt.quick" }
     Depends { name: "Qt.sql" }
+    Depends { name: "Qt.multimedia" }
     Depends { name: "pgnmodule" }
 
     // Additional import path used to resolve QML modules in Qt Creator's code model
