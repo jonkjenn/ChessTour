@@ -50,13 +50,10 @@ void myMessageOutput(QtMsgType type, const QMessageLogContext &context, const QS
 }
 
 
-using namespace std;
-
 #include <QJsonDocument>
 #include "Tests/testdata.h"
 int main(int argc, char *argv[])
 {
-
     qInstallMessageHandler(myMessageOutput);
     QCoreApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
     QCoreApplication::setOrganizationName("Jonkjenn");
@@ -114,8 +111,11 @@ int main(int argc, char *argv[])
     Chess24Manager *c24Manager = new Chess24Manager(&app,*c24ws,*c24Sql,*tsm,*rsm,*lsm,*tournamentToken,*tournamentListToken);
 
     //Get the tournament details when select a new tournament
-    QObject::connect(tsm,&TournamentsSqlModel::currentIndexChanged,c24Manager,&Chess24Manager::onCurrentTournamentChanged);
     QObject::connect(parser,&Chess24MessageParser::webTournamentRedisAR,c24Manager,&Chess24Manager::onWebTournamentRedisAR);
+
+    QObject::connect(tsm,&TournamentsSqlModel::currentTournamentChanged,c24Manager,&Chess24Manager::onCurrentTournamentChanged);
+    QObject::connect(c24Manager,&Chess24Manager::tournamentLoaded,rsm,&RoundsSqlModel::onTournamentLoaded);
+    QObject::connect(rsm,&RoundsSqlModel::roundChanged,lsm,&LiveMatchSqlModel::onCurrentRoundChanged);
 
     QMetaObject::Connection onConnectedCon;
 

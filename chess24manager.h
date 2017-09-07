@@ -13,6 +13,7 @@
 #include "livematchsqlmodel.h"
 #include "tokencontainer.h"
 #include "chess24messageparser.h"
+#include "internalmessages.h"
 
 class Chess24Websocket;
 class Chess24SqlHandler;
@@ -29,7 +30,6 @@ public:
                    TokenContainer &tournamentToken, TokenContainer &tournamentListToken
                    );
     void subscribeTournament(QString name);
-    void onCurrentTournamentChanged(int row);
     bool canRequestTournaments() const;
     TokenContainer &tournamentToken;
     TokenContainer &tournamentListToken;
@@ -40,9 +40,12 @@ public:
     bool canRefreshTournament() const;
     void onWebTournamentRedisAR(WebTournamentRedisAR msg);
 
+    void onCurrentTournamentChanged(InternalMessages::TournamentChangedData data);
+
 signals:
     void canRefreshTournamentListChanged(bool canRefreshTournamentList);
     void canRefreshTournamentChanged(bool canRefreshTournament);
+    void tournamentLoaded(InternalMessages::TournamentChangedData data);
 
 private:
     Chess24Websocket &c24ws;
@@ -52,7 +55,7 @@ private:
     TournamentsSqlModel &tsm;
     RoundsSqlModel &rsm;
     LiveMatchSqlModel &lsm;
-    void getTournament(QString name);
+    void getTournament(InternalMessages::TournamentChangedData data);
     void getTournamentList();
 };
 

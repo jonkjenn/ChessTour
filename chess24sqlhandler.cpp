@@ -82,7 +82,8 @@ QVariantList Chess24SqlHandler::insertUpdateMatches(const QVariantList &Number,c
 }
 
 
-QVariantMap Chess24SqlHandler::insertUpdateRounds(const QVariantList &Number, const QVariantList &rounds, const int tournamentPk, bool returnChanges){
+//TODO:: This function does too much
+QVariantMap Chess24SqlHandler::insertUpdateRounds(const QVariantList &Number, const QVariantMap &rounds, const int tournamentPk, bool returnChanges){
 
     QVariantMap changes;
     QVariantList roundChanges;
@@ -104,8 +105,8 @@ QVariantMap Chess24SqlHandler::insertUpdateRounds(const QVariantList &Number, co
     vals.insert("TournamentId",tournamentPk);
     QVariantList pks = SqlHelper::getColumnList(database,"Round","Id",rounds.size(),lists,vals);
 
-    for(int i=0;i<rounds.size();++i){
-        QVariantMap round = rounds.at(i).toMap();
+    for(size_t i=0;i<rounds.keys().size();++i){
+        QVariantMap round = rounds.value(rounds.keys().at(i)).toMap();
         QVariantMap where;
         where.insert("Id",pks.at(i));
         SqlHelper::updateTable(database,"Round",round,where);
@@ -210,7 +211,7 @@ QVariantMap Chess24SqlHandler::updateTournament(QString name, QVariantMap map, b
     }
     if(map.keys().contains("roundWrapper")){
         QVariantMap roundWrapper = map.value("roundWrapper").toMap();
-        changes = insertUpdateRounds(roundWrapper.value("Number").toList(),roundWrapper.value("rounds").toList(),tournamentPk.value(),returnChanges);
+        changes = insertUpdateRounds(roundWrapper.value("Number").toList(),roundWrapper.value("rounds").toMap(),tournamentPk.value(),returnChanges);
     }
 
     QVariantMap where;
@@ -235,7 +236,7 @@ QVariantMap Chess24SqlHandler::updateTournament(QString name, QVariantMap map, b
     return changes;
 }
 
-QDateTime Chess24SqlHandler::lastUpdated(int row, int pk){
+QDateTime Chess24SqlHandler::lastUpdated(int pk){
     QSqlQuery checkSql(database);
     checkSql.prepare("SELECT LastUpdated FROM Tournament WHERE Id = :id");
     checkSql.bindValue(":id",pk);

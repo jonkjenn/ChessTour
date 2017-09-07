@@ -172,15 +172,18 @@ QVariantMap transformWebTournamentMatches(const QVariantMap &root){
     return result;
 }
 
-QVariantMap transformWebTournamentRounds(const QVariantMap &root){
+QVariantMap transformWebTournamentRounds(const QVariantMap &root,std::optional<QVariantMap> gamesPerMatch){
     QVariantMap result;
     QVariantList numbers;
-    QVariantList rounds;
+    QVariantMap rounds;
     for(auto key:root.keys()){
         QVariantMap inRound = root.value(key).toMap();
         QVariantMap outRound;
 
         insertFlat(outRound,inRound,"startDate","StartDate");
+        if(gamesPerMatch){
+            outRound.insert("GamesPerMatch",gamesPerMatch.value().value(key));
+        }
 
        if(inRound.contains("matches")){
             QVariantMap matches = transformWebTournamentMatches(inRound.value("matches").toMap());
@@ -189,7 +192,7 @@ QVariantMap transformWebTournamentRounds(const QVariantMap &root){
 
         numbers.append(key.toInt());
         outRound.insert("Number",key.toInt());
-        rounds.append(outRound);
+        rounds.insert(key,outRound);
     }
     result.insert("Number",numbers);
     result.insert("rounds",rounds);
@@ -223,7 +226,21 @@ QVariantMap transformWebTournament(const QVariantMap &root){
             result.insert("players",players);
         }
         if(root.keys().contains("rounds")){
-            QVariantMap rounds = transformWebTournamentRounds(root.value("rounds").toMap());
+
+            std::optional<QVariantMap> gamesPerMatch;
+
+            if(root.keys().contains("gamesPerMatch")){
+                 gamesPerMatch = root.value("gamesPerMatch").toMap();
+
+                /*for(auto k:gamesPerMatch.keys()){
+                    QVariantMap &round  = qvariant_cast<QVariantMap>(rounds[k]);
+                    round.insert("GamesPerMatch",gamesPerMatch.value(k));
+                }*/
+            }
+
+            QVariantMap rounds = transformWebTournamentRounds(root.value("rounds").toMap(),gamesPerMatch);
+
+
             result.insert("roundWrapper",rounds);
         }
 
@@ -233,6 +250,11 @@ QVariantMap transformWebTournament(const QVariantMap &root){
         insertFlat(result,root,"eventType","EventType");
         insertFlat(result,root,"status","Status");
         insertFlat(result,root,"id","Name");
+        if(root.contains("currentGame")){
+            insertFlat(result,root,"currentGame","CurrentGame");
+        }
+
+
         return result;
 }
 
@@ -248,33 +270,6 @@ void parseSubtree(QMap<QString,QVariant> &updates,const QVariantMap &valid,const
         }
     }
 }
-
-/*QVariantMap transformWebTournament(QVariantMap &result, const QVariantMap &valid,const QVariantMap &root, bool list=false, QVariantMap &subResult){
-    for(auto key:valid.keys()){
-        if(root.contains(key)){
-            if(valid.value(key).type() == QVariant::Type::Map){
-                result.insert(key,QVariantMap());
-                transformWebTournament(result.value(key),valid.value(key),root.value(key),list);
-            }else{
-                if(list){
-                    if(!result.contains(valid.value(key).toString())){
-                        result.insert(key,QVariantList());
-                    }
-                    result.value(key).toList().append(root.value(key));
-                }
-                else{
-                    //Use the corrected column name from valid map
-                    result.insert(valid.value(key).toString(),root.value(key).toVariant());
-                }
-            }
-        }else if(key == "##LISTS##"){
-            for(auto rKey:root.keys()){
-                transformWebTournament(result.value(key),valid.value(key).toMap(),root.value(key).toMap(),true);
-            }
-        }
-    }
-
-}*/
 
 QVariantMap validWebTournamentGame(){
     QVariantMap valid;
@@ -302,18 +297,5 @@ QVariantMap validWebTournamentGame(){
     valid.insert("fullGameRKey","FullGameRKey");
     return valid;
 }
-
-/*QVariantMap validWebTournamentJson()
-{
-    QVariantMap valid;
-    QVariantMap players;
-    valid.insert("players",players);
-    QVariantMap player;
-    players.insert("##LISTS##",player);
-    player.insert("fideId","FideId");
-    player.insert("name","Name");
-    return valid;
-}*/
-
 
 }

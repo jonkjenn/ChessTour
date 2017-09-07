@@ -52,9 +52,18 @@ ApplicationWindow {
             id:tournamentView
 
             RowLayout{
+                id:roundRow
+                height: 35
+                Label{
+                    anchors.verticalCenter: roundRow.verticalCenter
+                    text: "Rounds:"
+                }
+
                 RoundList{
                     id:roundsView
                     Layout.fillWidth: true
+                    height: roundRow.height
+                    anchors.verticalCenter: roundRow.verticalCenter
                 }
                 Button{
                     implicitHeight: 50
@@ -71,9 +80,88 @@ ApplicationWindow {
                 Layout.fillHeight: true
             }*/
 
+            ListModel{
+                id: gameSelectModel
+            }
+
+            RowLayout{
+                id:gameSelectView
+                visible: false
+
+                Label{
+                    anchors.verticalCenter: gameSelectView.verticalCenter
+                    text: "Game: "
+                }
+
+            ListView{
+                id:gameSelectList
+                orientation: ListView.Horizontal
+                Layout.fillWidth: true
+                model:gameSelectModel
+                height: 30
+
+                delegate: ItemDelegate{
+                    id: gameSelectControl
+                    height: gameSelectList.height
+                    width: 30
+
+                    contentItem:
+                                Label{
+                                    text: gameNumber
+                                    font.pixelSize: 20
+                                    verticalAlignment: Label.AlignVCenter
+                                    horizontalAlignment: Label.AlignHCenter
+                                    }
+
+                    background: Rectangle{
+                        color: if(index === gameSelectList.currentIndex){
+                                   return Material.color(Material.Amber);
+                               }else{
+                                   if(gameSelectMA.containsMouse){
+                                   return Material.color(Material.Grey)
+                                   }
+                                   return "transparent"
+                               }
+                        border.width: 2
+                        border.color:
+                            if(matchSqlModel.currentGameNumber()===index+1
+                                    && control.highlighted
+                                    ){
+                                  return "#7af442";
+                              }else{
+                                  return "transparent";
+                              }
+                    }
+
+        MouseArea {
+            id:gameSelectMA
+            anchors.fill: parent
+            onClicked: {
+                        matchSqlModel.setCurrentGameNumber(gameNumber)
+                        gameSelectList.currentIndex = index
+            }
+            hoverEnabled: true
+        }
+                }
+            }
+            }
+
             MatchList{
                 Layout.fillWidth: true
                 Layout.fillHeight: true
+            }
+
+            Connections{
+                target:matchSqlModel
+                onCurrentRoundLoaded:{
+                    gameSelectView.visible = matchSqlModel.eventType() === "knockout"
+                    console.log(matchSqlModel.eventType());
+                    gameSelectModel.clear();
+                    for(var i=0;i<matchSqlModel.gamesPerMatch();++i){
+                        gameSelectModel.append({"gameNumber":i+1});
+                    }
+                }
+
             }
         }
     }

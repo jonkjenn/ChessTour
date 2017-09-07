@@ -1,4 +1,5 @@
 #include "livematchsqlmodel.h"
+#include "sqlhelper.h"
 #include <QSqlQuery>
 #include <QSqlError>
 #include <QDebug>
@@ -38,6 +39,29 @@ void LiveMatchSqlModel::possibleUpdates(const QVariantList &lists){
     }
 }
 
+QString LiveMatchSqlModel::eventType() const
+{
+    return m_eventType;
+}
+
+int LiveMatchSqlModel::gamesPerMatch() const
+{
+    return m_gamesPerMatch;
+}
+
+void LiveMatchSqlModel::setCurrentGameNumber(int gameNumber)
+{
+    beginResetModel();
+    m_currentGameNumber = gameNumber;
+    updateData(m_currentPk,m_currentGameNumber);
+    endResetModel();
+}
+
+int LiveMatchSqlModel::currentGameNumber()
+{
+    return m_currentGameNumber;
+}
+
 int LiveMatchSqlModel::rowCount(const QModelIndex &parent) const
 {
     return m_rowCount;
@@ -46,27 +70,8 @@ int LiveMatchSqlModel::rowCount(const QModelIndex &parent) const
 QVariant LiveMatchSqlModel::data(const QModelIndex &index, int role) const
 {
     int pk = rowToPk.value(index.row());
-    QSqlQuery q(database);
-    if(roleIdToColumn.value(role) == "WhiteFide"){
-        q.exec("select Players.Name from Match JOIN Players on Players.fideId = WhiteFide and Id = " + QString::number(pk));
-    }else if(roleIdToColumn.value(role) == "BlackFide"){
-        q.exec("select Players.Name from Match JOIN Players on Players.fideId = BlackFide and Id = " + QString::number(pk));
-    }else{
-        q.prepare("SELECT " + roleIdToColumn.value(role) + " FROM Match WHERE Id = ?");
-        q.bindValue(0,pk);
-        q.exec();
-    }
 
-    if(q.lastError().isValid()){qDebug() << q.lastError();}
-
-    if(!q.next()){
-        return "";
-    }
-
-    if(q.isNull(0)){
-        return "";
-    }
-    return q.value(0);
+    return SqlHelper::selectMatchColumn(database,pk,roleIdToColumn.value(role));
 }
 
 bool LiveMatchSqlModel::setData(int row, QString column, const QVariant &value){
@@ -95,24 +100,43 @@ QHash<int, QByteArray> LiveMatchSqlModel::roleNames() const
     return roles;
 }
 
-void LiveMatchSqlModel::setRound(int pk){
+void LiveMatchSqlModel::onCurrentRoundChanged(InternalMessages::RoundChangedData roundData,std::optional<InternalMessages::TournamentChangedData> tournamentData){
     beginResetModel();
-    QSqlQuery q(database);
-    q.prepare("SELECT Id FROM Match WHERE RoundId = :roundId");
-    q.bindValue(":roundId",pk);
-    q.exec();
+
+    std::optional<int> gameNumber = std::nullopt;
+
+    if(tournamentData){
+        m_eventType = tournamentData.value().eventType;
+        m_currentGameNumber = tournamentData.value().currentGame;
+        if(m_currentGameNumber>0){
+            gameNumber = std::optional<int>(m_currentGameNumber);
+        }
+    }
+    else{
+        m_currentGameNumber = 0;
+    }
+
+    m_gamesPerMatch = roundData.gamesPerMatch;
+    m_currentPk = roundData.pk;
+
+    updateData(m_currentPk,gameNumber);
+
+    endResetModel();
+    emit currentRoundLoaded();
+}
+
+void LiveMatchSqlModel::updateData(int roundPk, std::optional<int> gameNumber){
+    QVector<int> pks = SqlHelper::selectMatchIds(database,roundPk,gameNumber);
+
     int i=0;
     rowToPk.clear();
     pkToRow.clear();
-    while(q.next()){
-        rowToPk.insert(i,q.value(0).toInt());
-        pkToRow.insert(q.value(0).toInt(),i);
+    for(auto p:pks){
+        rowToPk.insert(i,p);
+        pkToRow.insert(p,i);
         ++i;
     }
     m_rowCount = rowToPk.size();
-
-    m_currentPk = pk;
-    endResetModel();
 }
 
 int LiveMatchSqlModel::currentPk()

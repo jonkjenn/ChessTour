@@ -20,8 +20,11 @@ TournamentListView{
         highlighted: index === tournamentsList.currentIndex
 
         contentItem: Text{
+            anchors.verticalCenter: control.verticalCenter
+            anchors.left: control.left
             text: title==""?name:title
             color: control.Material.foreground
+            verticalAlignment: Text.AlignVCenter
             wrapMode: Text.WordWrap
         }
         background: Rectangle{
@@ -36,7 +39,6 @@ TournamentListView{
     }
 
     onCurrentIndexChanged: {
-        tournamentsList.currentPK = tournamentsSqlModel.getPk(currentIndex)
         tournamentsSqlModel.setCurrentIndex(currentIndex)
     }
 }

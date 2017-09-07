@@ -2,6 +2,8 @@
 #define LIVEMATCHSQLMODEL_H
 #include <QAbstractListModel>
 #include <QtSql/QSqlDatabase>
+#include <optional>
+#include "internalmessages.h"
 
 class LiveMatchSqlModel:public QAbstractListModel
 {
@@ -18,18 +20,33 @@ public:
     bool insertRows(int row, int count, const QModelIndex &parent) override;
     QHash<int, QByteArray> roleNames() const override;
 
-    Q_INVOKABLE void setRound(int pk);
     int currentPk();
     void possibleUpdates(const QVariantList &map);
+    Q_INVOKABLE QString eventType() const;
+    Q_INVOKABLE int gamesPerMatch() const;
+    Q_INVOKABLE void setCurrentGameNumber(int gameNumber);
+    Q_INVOKABLE int currentGameNumber();
+
+    void updateData(int roundPk, std::optional<int> gameNumber=std::nullopt);
+public slots:
+    void onCurrentRoundChanged(InternalMessages::RoundChangedData roundData, std::optional<InternalMessages::TournamentChangedData> tournamentData);
+
 private:
     QSqlDatabase &database;
     int m_rowCount = 0;
     int m_currentPk = -1;
+    QString m_eventType;
     QHash<int, QByteArray> roles;
     QHash<int, QString> roleIdToColumn;
     QHash<QString, int> columnToRoleId;
     QHash<int,int> rowToPk;
     QHash<int,int> pkToRow;
+    int m_currentGameNumber = 0;
+
+    int m_gamesPerMatch = 1;
+
+signals:
+    void currentRoundLoaded();
 };
 
 #endif // LIVEMATCHSQLMODEL_H

@@ -68,7 +68,7 @@ ListView{
             ColumnLabel{
                 property int changes: 0
                 id: engineLabel
-                text:enginemate==""?enginescore/100.0:enginemate
+                text:enginemate==""?enginescore/100.0:"#"+enginemate
                 color: if(enginemate != ""){
                            return "yellow"
                        }else{
@@ -125,12 +125,5 @@ ListView{
             }
         }
 
-    }
-
-    Connections{
-        target:roundsView
-        onCurrentRoundPKChanged:{
-            matchSqlModel.setRound(roundsView.currentRoundPK)
-        }
     }
 }

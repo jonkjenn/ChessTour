@@ -9,6 +9,10 @@ RoundsSqlModel::RoundsSqlModel(QObject *parent, QSqlDatabase database):
 {
 }
 
+QVariant RoundsSqlModel::data(int row, QString columnName)const
+{
+    return data(index(row,0),fieldIndex(columnName) + Qt::UserRole + 1);
+}
 
 QVariant RoundsSqlModel::data(const QModelIndex &index, int role) const
 {
@@ -36,8 +40,6 @@ QHash<int, QByteArray> RoundsSqlModel::roleNames() const
     return roles;
 }
 
-
-
 bool RoundsSqlModel::select()
 {
     if(!QSqlTableModel::select()){return false;}
@@ -63,29 +65,34 @@ int RoundsSqlModel::getPk(int row)
     return primaryValues(row).value(0).toInt();
 }
 
-void RoundsSqlModel::setCurrentIndex(int index)
+void RoundsSqlModel::setCurrentIndex(int row)
 {
-    setCurrentShownRound(index);
+    saveCurrentShownRound(getPk(row));
+    m_currentRoundIndex = row;
+    InternalMessages::RoundChangedData d(getPk(row),data(row,"GamesPerMatch").toInt());
+    emit roundChanged(d);
 }
 
-void RoundsSqlModel::tournamentChanged(int pk)
+int RoundsSqlModel::currentRoundIndex()
 {
-    setFilter("TournamentId = " + QString::number(pk));
+    return m_currentRoundIndex;
+}
+
+void RoundsSqlModel::onTournamentLoaded(InternalMessages::TournamentChangedData d)
+{
+    setFilter("TournamentId = " + QString::number(d.pk));
     setSort(0,Qt::SortOrder::AscendingOrder);
     select();
-    m_currentPK = pk;
+    m_currentRoundIndex = d.currentRoundIndex - 1;
+    m_currentTournamentPk = d.pk;
+    saveCurrentShownRound(getPk(m_currentRoundIndex));
+
+    InternalMessages::RoundChangedData rd(getPk(m_currentRoundIndex),data(m_currentRoundIndex,"GamesPerMatch").toInt());
+
+    emit roundChanged(rd,d);
 }
 
-void RoundsSqlModel::forceRefresh(){
-    select();
-}
-
-int RoundsSqlModel::currentPK()
-{
-    return m_currentPK;
-}
-
-int RoundsSqlModel::currentShownRound()
+/*int RoundsSqlModel::currentShownRound()
 {
     QModelIndex i = index(0,fieldIndex("TournamentId"));
     int tournamentId = data(i,Qt::DisplayRole).toInt();
@@ -103,18 +110,25 @@ int RoundsSqlModel::currentShownRound()
     }
 
     return currRound;
-}
+}*/
 
-void RoundsSqlModel::setCurrentShownRound(int currentShownRound)
+void RoundsSqlModel::saveCurrentShownRound(int roundPk)
 {
-    QModelIndex i = index(currentShownRound,fieldIndex("TournamentId"));
-    int tournamentId = data(i,Qt::DisplayRole).toInt();
+    /*QModelIndex i = index(currentShownRound,fieldIndex("TournamentId"));
+    int tournamentId = data(i,Qt::DisplayRole).toInt();*/
+
+    //int roundPk = getPk(currentShownRound);
 
     QSqlQuery sql(database);
     sql.prepare("UPDATE Tournament SET CurrentShownRound = :currentShownRound WHERE Id = :tournamentId");
-    sql.bindValue(":currentShownRound", getPk(currentShownRound));
-    sql.bindValue(":tournamentId",tournamentId);
+    sql.bindValue(":currentShownRound",roundPk);
+    sql.bindValue(":tournamentId",m_currentTournamentPk);
     sql.exec();
     if(sql.lastError().isValid()){ qDebug() << sql.lastError();}
     //qDebug() << sql.lastQuery();
+}
+
+int RoundsSqlModel::currentTournamentPk() const
+{
+    return m_currentTournamentPk;
 }

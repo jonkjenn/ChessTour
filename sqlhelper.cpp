@@ -34,6 +34,58 @@ void SqlHelper::createDatabase(QSqlDatabase db, QString fileName){
     file.close();
 }
 
+QVariant SqlHelper::selectMatchColumn(QSqlDatabase db, int id, QString column)
+{
+    QSqlQuery q(db);
+    QString sql;
+    if(column == "WhiteFide"){
+        sql = "select Players.Name from Match join Players on Players.fideId = WhiteFide where Id = :matchPk";
+    }else if(column == "BlackFide"){
+        sql = "select Players.Name from Match join Players on Players.fideId = BlackFide where Id = :matchPk";
+    }else{
+        sql = "SELECT " + column + " FROM Match WHERE Id = :matchPk";
+    }
+
+    q.prepare(sql);
+    q.bindValue(":matchPk",id);
+
+    if(!q.exec()){qDebug() << q.lastError();}
+    if(!q.next()){
+        return "";
+    }
+
+    QVariant out = q.value(0);
+    if(!out.isValid()){
+        return "";
+    }
+    if(out.isNull()){
+        return "";
+    }
+    return out;
+}
+
+QVector<int> SqlHelper::selectMatchIds(QSqlDatabase db, int roundPk, std::optional<int> gameNumber)
+{
+    QSqlQuery q(db);
+    QString sql = ("SELECT Id FROM Match WHERE RoundId = :roundId");
+    if(gameNumber){
+        sql.append(" AND GameNumber = :gameNumber");
+    }
+    q.prepare(sql);
+    q.bindValue(":roundId",roundPk);
+
+    if(gameNumber){
+        q.bindValue(":gameNumber",gameNumber.value());
+    }
+
+    if(!q.exec()){qDebug() << q.lastError();}
+    QVector<int> res;
+    while(q.next()){
+        res.append(q.value(0).toInt());
+    }
+    return res;
+}
+
 int SqlHelper::insertLists(QSqlDatabase database, const QString table, const QVector<QVariantList> &lists, const QVector<QString> &names){
     QSqlQuery q(database);
     QString sql = "insert or ignore into " + table + " (";

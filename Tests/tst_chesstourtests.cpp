@@ -201,15 +201,16 @@ void ChessTourTests::test_transformWebTournament()
     QVERIFY(rounds.value("Number").toList().contains(1));
     QVERIFY(rounds.value("Number").toList().contains(6));
 
-    QVariantList roundList = rounds.value("rounds").toList();
-    QVariantMap round = roundList.at(0).toMap();
+    QVariantMap roundList = rounds.value("rounds").toMap();
+    QVariantMap round = roundList.value(roundList.keys().first()).toMap();
     QCOMPARE(round.value("StartDate").toLongLong(),static_cast<qlonglong>(1502733600000));
     QCOMPARE(round.value("Number").toInt(),1);
     QVariantMap round10;
-    for(auto l:roundList){
-        if(l.toMap().value("Number") == 10){
-            QCOMPARE(l.toMap().value("StartDate").toLongLong(),static_cast<qlonglong>(1502992800000));
-            round10 = l.toMap();
+    for(auto ll:roundList.keys()){
+        QVariantMap l = roundList.value(ll).toMap();
+        if(l.value("Number") == 10){
+            QCOMPARE(l.value("StartDate").toLongLong(),static_cast<qlonglong>(1502992800000));
+            round10 = l;
             break;
         }
     }
@@ -260,10 +261,10 @@ void ChessTourTests::test_getWebTournamentDiffMap()
     QVariantMap result = Chess24Messages::transformWebTournament(map.value("diffs").toMap());
 
     QCOMPARE(result.value("roundWrapper").toMap().value("Number").toList().at(0).toInt(),9);
-    QVariantList rounds = result.value("roundWrapper").toMap().value("rounds").toList();
+    QVariantMap rounds = result.value("roundWrapper").toMap().value("rounds").toMap();
     QCOMPARE(rounds.size(),1);
 
-    QVariantMap round = rounds.at(0).toMap();
+    QVariantMap round = rounds.value(rounds.keys().at(0)).toMap();
     QVariantMap matchWrapper = round.value("matchWrapper").toMap();
     QVariantList games = matchWrapper.value("games").toList();
     QVariantList Number = matchWrapper.value("Number").toList();
@@ -296,7 +297,7 @@ void ChessTourTests::test_sqlHelper()
 {
     QSqlDatabase db = QSqlDatabase::addDatabase("QSQLITE");
     //db.setDatabaseName(QDir::currentPath() + QDir::separator() + "test.sqlite");
-    db.setDatabaseName(":memory");
+    db.setDatabaseName(":memory:");
     db.open();
     db.transaction();
     QSqlQuery qdrop("drop table Test1",db);

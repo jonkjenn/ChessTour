@@ -2,6 +2,9 @@
 #define TOURNAMENTSSQLMODEL_H
 #include <QtSql/QSqlTableModel>
 #include <QHash>
+#include <optional>
+#include "internalmessages.h"
+
 
 class TournamentsSqlModel:public QSqlTableModel
 {
@@ -18,13 +21,15 @@ public:
     void forceRefresh();
 
     int getRow(int primaryKey);
-    Q_INVOKABLE int getPk(int row);
+    int getPk(int row);
     Q_INVOKABLE void setCurrentIndex(int row);
 
     bool setData(int row, QString column, const QVariant &value);
+    InternalMessages::TournamentChangedData getTournamentData(int row);
 signals:
-    void currentIndexChanged(int row);
-    void currentPKChanged(int pk);
+    //void currentIndexChanged(int row);
+    void currentTournamentChanged(InternalMessages::TournamentChangedData);
+    //void currentPKChanged(int pk);
 
 private:
     QSqlDatabase database;

@@ -79,10 +79,26 @@ int TournamentsSqlModel::getPk(int row)
     return primaryValues(row).value(0).toInt();
 }
 
+InternalMessages::TournamentChangedData TournamentsSqlModel::getTournamentData(int row){
+    InternalMessages::TournamentChangedData d(
+                getPk(row),
+                data(row,"CurrentRound").toInt(),
+                data(row,"Name").toString(),
+                data(row,"EventType").toString(),
+                false
+                );
+
+    QVariant currentGame = data(row,"CurrentGame");
+    if(currentGame.isValid()){
+        d.currentGame = currentGame.toInt();
+    }
+
+    return d;
+}
+
 void TournamentsSqlModel::setCurrentIndex(int row)
 {
-    emit currentIndexChanged(row);
-    //emit currentPKChanged(getPk(row));
+    emit currentTournamentChanged(getTournamentData(row));
 }
 
 bool TournamentsSqlModel::select()

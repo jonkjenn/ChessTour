@@ -5,6 +5,7 @@
 
 #include <QJsonDocument>
 #include <QJsonArray>
+#include <optional>
 
 Chess24Manager::Chess24Manager(QObject *parent, Chess24Websocket &c24ws, Chess24SqlHandler &sqlHandler,
                                TournamentsSqlModel &tsm, RoundsSqlModel &rsm, LiveMatchSqlModel &lsm,
@@ -46,7 +47,7 @@ void Chess24Manager::onWebTournamentRedisAR(WebTournamentRedisAR msg){
         QVariantMap transform = Chess24Messages::transformWebTournament(map.value("diffs").toMap());
 
         QVariantMap changes = sqlHandler.updateTournament(msg.tournament,transform,true);
-        if(rsm.currentPK() == changes.value("TournamentPk").toInt()){
+        if(rsm.currentTournamentPk() == changes.value("TournamentPk").toInt()){
             lsm.possibleUpdates(changes.value("match").toList());
         }
         //sqlHandler.getPksColumns(msg.tournament,transform,rsm.currentPK(),lsm.currentPk());
@@ -68,10 +69,10 @@ void Chess24Manager::subscribeTournament(QString name)
     c24ws.sendMessage(Chess24Messages::subscribeWebTournament(name));
 }
 
-void Chess24Manager::getTournament(QString name){
-    WSRequest *req = sendMessage(Chess24Messages::getWebTournament,name);
-    connect(req,&WSRequest::finished,[this,name](QString data){
-        QJsonDocument doc = QJsonDocument::fromJson(data.toUtf8());
+void Chess24Manager::getTournament(InternalMessages::TournamentChangedData data){
+    WSRequest *req = sendMessage(Chess24Messages::getWebTournament,data.name);
+    connect(req,&WSRequest::finished,[this,data](QString jsonData){
+        QJsonDocument doc = QJsonDocument::fromJson(jsonData.toUtf8());
         if(!doc.isArray()){
             return;
         }
@@ -84,34 +85,35 @@ void Chess24Manager::getTournament(QString name){
         }
         //sqlHandler.updateTournamentDetails(arr.at(0).toObject());
         QVariantMap transform = Chess24Messages::transformWebTournament(arr.at(0).toObject().toVariantMap());
-        sqlHandler.updateTournament(name,transform);
-        tsm.forceRefresh();
-        rsm.forceRefresh();
+        sqlHandler.updateTournament(data.name,transform);
+        emit tournamentLoaded(data);
     });
 }
 
-void Chess24Manager::onCurrentTournamentChanged(int row){
-    QString name = tsm.data(row,"Name").toString();
-    subscribeTournament(name);
-    qDebug() << "Subscribe to " << name;
+void Chess24Manager::onCurrentTournamentChanged(InternalMessages::TournamentChangedData data){
+    //QString name = tsm.data(row,"Name").toString();
 
-    QDateTime lastUpdated = sqlHandler.lastUpdated(row,tsm.getPk(row));
+
+    qDebug() << "Subscribe to " << data.name;
+
+    QDateTime lastUpdated = sqlHandler.lastUpdated(data.pk);
 
     if(lastUpdated.isValid()){
-        //Don't automatically update tournaments which already has been updated the last day
-        if(lastUpdated.daysTo(QDateTime::currentDateTimeUtc())<1){
+        //Don't automatically update tournaments which already has been updated the last 10 minutes
+        if(lastUpdated.msecsTo(QDateTime::currentDateTimeUtc())<1000*60*10){
+            subscribeTournament(data.name);
+            emit tournamentLoaded(data);
             return;
         }
     }
 
-    getTournament(name);
+    getTournament(data);
 }
 
 void Chess24Manager::refreshTournament(int row)
 {
     if(tournamentToken.getToken()){
-        QString name = tsm.data(row,"Name").toString();
-        getTournament(name);
+        getTournament(tsm.getTournamentData(row));
     }
 }
 
