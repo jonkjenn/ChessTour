@@ -6,7 +6,7 @@
 #include <QFile>
 #include <QDir>
 
-void SqlHelper::createDatabase(QSqlDatabase db, QString fileName){
+void SqlHelper::createDatabase(const QSqlDatabase db, QString fileName){
     QFile file(QDir::currentPath() + QDir::separator() + fileName);
 
     if(file.open(QIODevice::ReadOnly|QIODevice::Text)){
@@ -34,7 +34,7 @@ void SqlHelper::createDatabase(QSqlDatabase db, QString fileName){
     file.close();
 }
 
-QVariant SqlHelper::selectMatchColumn(QSqlDatabase db, int id, QString column)
+QVariant SqlHelper::selectMatchColumn(const QSqlDatabase db, int id, QString column)
 {
     QSqlQuery q(db);
     QString sql;
@@ -64,7 +64,7 @@ QVariant SqlHelper::selectMatchColumn(QSqlDatabase db, int id, QString column)
     return out;
 }
 
-QVariant SqlHelper::selectWhere(QSqlDatabase db, QString table, QString column, QVariantMap where)
+QVariant SqlHelper::selectWhere(const QSqlDatabase db, QString table, QString column, QVariantMap where)
 {
     QSqlQuery q(db);
 
@@ -89,7 +89,7 @@ QVariant SqlHelper::selectWhere(QSqlDatabase db, QString table, QString column, 
     return q.value(0);
 }
 
-QVector<int> SqlHelper::selectMatchIds(QSqlDatabase db, int roundPk, std::optional<int> gameNumber)
+QVector<int> SqlHelper::selectMatchIds(const QSqlDatabase db, int roundPk, std::optional<int> gameNumber)
 {
     QSqlQuery q(db);
     QString sql = ("SELECT Id FROM Match WHERE RoundId = :roundId");
@@ -111,7 +111,7 @@ QVector<int> SqlHelper::selectMatchIds(QSqlDatabase db, int roundPk, std::option
     return res;
 }
 
-int SqlHelper::insertLists(QSqlDatabase database, const QString table, const QVector<QVariantList> &lists, const QVector<QString> &names){
+int SqlHelper::insertLists(const QSqlDatabase database, const QString table, const QVector<QVariantList> &lists, const QVector<QString> &names){
     QSqlQuery q(database);
     QString sql = "insert or ignore into " + table + " (";
     for(auto n:names){
@@ -145,7 +145,7 @@ QString SqlHelper::updateQueryFromMap(const QVariantMap &map){
 }
 
 //
-int SqlHelper::updateTable(QSqlDatabase &database, QString table, const QVariantMap map, const QVariantMap whereMap){
+int SqlHelper::updateTable(const QSqlDatabase &database, QString table, const QVariantMap map, const QVariantMap whereMap){
         QSqlQuery update(database);
         QString sql = "update "+ table + " set ";
         sql.append(updateQueryFromMap(map));
@@ -184,7 +184,7 @@ int SqlHelper::updateTable(QSqlDatabase &database, QString table, const QVariant
         return update.numRowsAffected();
 }
 
-QVariantList SqlHelper::getColumnList(QSqlDatabase &database, QString table, QString column, int listSize, QVariantMap &whereLists, QVariantMap &whereValues){
+QVariantList SqlHelper::getColumnList(const QSqlDatabase &database, QString table, QString column, int listSize, QVariantMap &whereLists, QVariantMap &whereValues){
     QVariantList out;
     if(listSize>0){
         for(int i=0;i<listSize;++i){

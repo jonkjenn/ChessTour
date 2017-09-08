@@ -13,7 +13,6 @@
         <file>MatchTable.qml</file>
         <file>ChessTour.qbs.user</file>
         <file>pling.wav</file>
-        <file>chess24.cpp</file>
         <file>ding.wav</file>
     </qresource>
 </RCC>

@@ -16,6 +16,7 @@ public:
     Chess24MessageParser(QObject *);
 
 
+    void parseEvent(const QString &model, const QJsonObject &root);
 signals:
      void messageParsed(Message);
      void webTournamentRedisAR(WebTournamentRedisAR);

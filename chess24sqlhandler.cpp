@@ -34,7 +34,7 @@ Chess24SqlHandler::Chess24SqlHandler(QObject *parent)
 {
 }
 
-QVariantList Chess24SqlHandler::getMatchPks(QVariantList Number, QVariantList GameNumber, int roundPk){
+QVariantList Chess24SqlHandler::getMatchPks(QVariantList Number, QVariantList GameNumber, int roundPk) {
     QVariantMap whereList;
     whereList.insert("Number",Number);
     whereList.insert("GameNumber",GameNumber);
@@ -166,7 +166,7 @@ optional<int> Chess24SqlHandler::getGamePk(QString number, QString gameNumber, i
 }
 
 
-QVariantList Chess24SqlHandler::getRoundPk(QVariantList number, int tournamentId){
+QVariantList Chess24SqlHandler::getRoundPk(QVariantList number, int tournamentId) {
     QVariantList pks;
     for(auto n:number){
         QSqlQuery q(database);
@@ -193,7 +193,7 @@ optional<int> Chess24SqlHandler::getRoundPk(QString number, int tournamentId){
      return {};
 }
 
-optional<int> Chess24SqlHandler::getTournamentPk(QString name){
+optional<int> Chess24SqlHandler::getTournamentPk(QString name) {
     QSqlQuery q(database);
      q.prepare("select Id from Tournament where Name = ?");
      q.addBindValue(name);
@@ -204,7 +204,7 @@ optional<int> Chess24SqlHandler::getTournamentPk(QString name){
      return {};
 }
 
-QVariantMap Chess24SqlHandler::updateTournament(QString name, QVariantMap map, bool returnChanges){
+QVariantMap Chess24SqlHandler::updateTournament(QString name, QVariantMap map, bool returnChanges) {
     QVariantMap changes;
 
     database.transaction();

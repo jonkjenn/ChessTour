@@ -65,10 +65,12 @@ ListView{
             spacing: 10
             NameColumnLabel{
                 text:whitefide
+                color: resultwhite>0.5?Material.color(Material.Amber):Material.foreground
                 width: 150
             }
             NameColumnLabel{
                 text:blackfide
+                color: resultblack>0.5?Material.color(Material.Amber):Material.foreground
                 width: 150
             }
             ColumnLabel{

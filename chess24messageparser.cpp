@@ -13,6 +13,27 @@ Chess24MessageParser::Chess24MessageParser(QObject *parent):
 
 }
 
+void Chess24MessageParser::parseEvent(const QString &model,const QJsonObject &root){
+        if(model.startsWith("webTournamentRedisAR:")){
+            QString tournament = model.mid(model.indexOf(":")+1);
+
+            if(!root.keys().contains("args")){
+                qDebug() << "Event does not contain args";
+                return;
+            }
+
+            QJsonArray argsWrapper = root.value("args").toArray();
+            WebTournamentRedisAR tourRedis;
+            tourRedis.tournament = tournament;
+            tourRedis.args = argsWrapper.at(0).toObject();
+
+            emit webTournamentRedisAR(tourRedis);
+        }
+        else{
+            qDebug() << "Unknown model name";
+        }
+}
+
 void Chess24MessageParser::parseMessage(QString msg)
 {
     QString header = getHeader(msg);
@@ -66,23 +87,8 @@ void Chess24MessageParser::parseMessage(QString msg)
         }
 
         QString model = name.mid(6);
-        if(!model.startsWith("webTournamentRedisAR:")){
-            qDebug() << "Unknown model name";
-            qDebug() << data;
-            return;
-        }
-        QString tournament = model.mid(model.indexOf(":")+1);
 
-        if(!root.keys().contains("args")){
-            qDebug() << "Event does not contain args";
-            return;
-        }
-
-        QJsonArray argsWrapper = root.value("args").toArray();
-        WebTournamentRedisAR tourRedis;
-        tourRedis.tournament = tournament;
-        tourRedis.args = argsWrapper.at(0).toObject();
-        emit webTournamentRedisAR(tourRedis);
+        parseEvent(model,root);
 
         return;
     }
@@ -102,7 +108,8 @@ void Chess24MessageParser::parseMessage(QString msg)
         if(!ok){return;}
 
 
-        QString json = data.mid(ipluss+1,data.size()-ipluss+1);
+        //QString json = data.mid(ipluss+1,data.size()-ipluss+1);
+        QString json = data.mid(ipluss+1);//From + to eol
 
         Message m(type);
         m.data = json;

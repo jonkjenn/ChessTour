@@ -12,6 +12,7 @@ TournamentListView{
     property int currentPK: -1
     spacing: 2
 
+
     delegate:ItemDelegate{
         id:control
         height: 35

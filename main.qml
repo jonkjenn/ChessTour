@@ -56,8 +56,8 @@ ApplicationWindow {
                 implicitWidth: 90
                 id: control
                 text: qsTr("Refresh")
-                onClicked:c24Manager.refreshTournamentList()
-                opacity: c24Manager.canRefreshTournamentList?1:0.3
+                onClicked:tournamentController.refreshTournamentList()
+                opacity: tournamentController.canRefreshTournamentList?1:0.3
             }
 
             Button{
@@ -75,6 +75,12 @@ ApplicationWindow {
                 Layout.fillHeight: true
                 Layout.preferredWidth: 250
             }
+        }
+        Rectangle{
+            color:"white"
+            width: 2
+            Layout.fillHeight: true
+            height: parent.height
         }
         ColumnLayout{
             Layout.fillWidth: true
@@ -107,8 +113,8 @@ ApplicationWindow {
                     implicitWidth: 90
                     id: button
                     text: qsTr("Refresh")
-                    onClicked:c24Manager.refreshTournament(tournamentList.currentIndex)
-                    opacity: c24Manager.canRefreshTournament?1:0.3
+                    onClicked:tournamentController.refreshTournament(tournamentList.currentIndex)
+                    opacity: tournamentController.canRefreshTournament?1:0.3
                 }
             }
 

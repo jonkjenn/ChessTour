@@ -9,9 +9,9 @@ struct TournamentChangedData{
     const int pk;
     const int currentRoundIndex = 1;
     int currentGame = 1;
-    const bool subscribed;
     const QString name;
     const QString eventType;
+    const bool subscribed;
 };
 struct RoundChangedData{
     RoundChangedData(int pk, int gamesPerMatch = 1):pk(pk),gamesPerMatch(gamesPerMatch){}

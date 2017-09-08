@@ -7,6 +7,13 @@
 
 const QString Chess24::loginurl = "https://chess24.com/en/login";
 
+///
+/// \brief Chess24::Chess24
+/// \param parent
+/// \param qnam
+///
+/// Fasilitates interactions with the Chess24 website
+///
 Chess24::Chess24(QObject *parent,QNetworkAccessManager &qnam):QObject(parent),qnam(qnam)
 {
 }
@@ -126,7 +133,7 @@ void Chess24::sslErrors(QNetworkReply *reply, const QList<QSslError> &errors)
 ///
 ///
 std::optional<QString> Chess24::getCSRF(QString source){
-    int csrfidx = source.indexOf("csrf"); //name attribute with the csrf value is after the value attribute with the actual csrf
+    int csrfidx = source.indexOf("csrf"); //The name attribute that says "csrf", is after the value attribute with the csrf code
 
     if(csrfidx<0){
         return {};

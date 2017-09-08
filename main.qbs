@@ -91,6 +91,8 @@ CppApplication {
         "sqlhelper.h",
         "tokencontainer.cpp",
         "tokencontainer.h",
+        "tournamentcontroller.cpp",
+        "tournamentcontroller.h",
         "tournamentssqlmodel.cpp",
         "tournamentssqlmodel.h",
         "wsrequest.cpp",
