@@ -7,8 +7,9 @@
 
 using namespace Chess24Messages::Helpers;
 
-Chess24MessageParser::Chess24MessageParser(QObject *parent):
-    QObject(parent)
+Chess24MessageParser::Chess24MessageParser(QObject *parent, Chess24SqlHandler &sqlHandler):
+    QObject(parent),
+    sqlHandler(sqlHandler)
 {
 
 }
@@ -23,11 +24,19 @@ void Chess24MessageParser::parseEvent(const QString &model,const QJsonObject &ro
             }
 
             QJsonArray argsWrapper = root.value("args").toArray();
-            WebTournamentRedisAR tourRedis;
-            tourRedis.tournament = tournament;
-            tourRedis.args = argsWrapper.at(0).toObject();
 
-            emit webTournamentRedisAR(tourRedis);
+            QVariantMap map = argsWrapper.at(0).toObject().toVariantMap();
+            if(map.keys().contains("diffs")){
+                QVariantMap transform = Chess24Messages::transformWebTournament(map.value("diffs").toMap());
+
+                QVariantMap changes = sqlHandler.updateTournament(tournament,transform,true);
+                emit tournamentMatchUpdates(changes.value("TournamentPk").toInt(),changes.value("match").toList());
+                /*
+                if(rsm.currentTournamentPk() == changes.value("TournamentPk").toInt()){
+                    lsm.possibleUpdates(changes.value("match").toList());
+                }*/
+                //sqlHandler.getPksColumns(msg.tournament,transform,rsm.currentPK(),lsm.currentPk());
+            }
         }
         else{
             qDebug() << "Unknown model name";

@@ -13,7 +13,7 @@ class TournamentController:public QObject
     Q_PROPERTY(bool canRefreshTournamentList READ canRefreshTournamentList NOTIFY canRefreshTournamentListChanged)
     Q_PROPERTY(bool canRefreshTournament READ canRefreshTournament NOTIFY canRefreshTournamentChanged)
 public:
-    TournamentController(QObject *parent, const Chess24Manager &manager, TournamentsSqlModel &tsm, TokenContainer &tournamentToken, TokenContainer &roundToken, Chess24SqlHandler &sqlHandler);
+    TournamentController(QObject *parent, TournamentsSqlModel &tsm, TokenContainer &tournamentToken, TokenContainer &roundToken);
 
     bool canRequestTournaments() const;
     Q_INVOKABLE void refreshTournament(int rowId);
@@ -26,14 +26,15 @@ public:
 signals:
     void canRefreshTournamentListChanged(bool canRefreshTournamentList);
     void canRefreshTournamentChanged(bool canRefreshTournament);
-    void tournamentLoaded(InternalMessages::TournamentChangedData data);
+    void requestUpdateTournament(InternalMessages::TournamentChangedData data);
+    void requestUpdateTournamentList();
 
 private:
     TournamentsSqlModel &tsm;
-    const Chess24Manager &manager;
-    Chess24SqlHandler &sqlHandler;
     TokenContainer &tournamentToken;
     TokenContainer &tournamentListToken;
+
+    InternalMessages::TournamentChangedData getTournamentData(int row);
 
     void getTournament(InternalMessages::TournamentChangedData data);
     void getTournamentList();

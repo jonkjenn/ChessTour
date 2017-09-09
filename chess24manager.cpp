@@ -7,10 +7,9 @@
 #include <QJsonArray>
 #include <optional>
 
-Chess24Manager::Chess24Manager(QObject *parent, Chess24Websocket &c24ws, Chess24SqlHandler &sqlHandler,
-                               TournamentsSqlModel &tsm, RoundsSqlModel &rsm, LiveMatchSqlModel &lsm)
+Chess24Manager::Chess24Manager(QObject *parent, Chess24Websocket &c24ws)
     :QObject(parent),
-    c24ws(c24ws), sqlHandler(sqlHandler),tsm(tsm),rsm(rsm),lsm(lsm)
+    c24ws(c24ws)
 {
 }
 
@@ -30,19 +29,3 @@ void Chess24Manager::sendMessage(QString msg) const
 {
     c24ws.sendMessage(msg);
 }
-
-
-void Chess24Manager::onWebTournamentRedisAR(WebTournamentRedisAR msg){
-    QVariantMap map = msg.args.toVariantMap();
-    if(map.keys().contains("diffs")){
-        QVariantMap transform = Chess24Messages::transformWebTournament(map.value("diffs").toMap());
-
-        QVariantMap changes = sqlHandler.updateTournament(msg.tournament,transform,true);
-        if(rsm.currentTournamentPk() == changes.value("TournamentPk").toInt()){
-            lsm.possibleUpdates(changes.value("match").toList());
-        }
-        //sqlHandler.getPksColumns(msg.tournament,transform,rsm.currentPK(),lsm.currentPk());
-    }
-}
-
-

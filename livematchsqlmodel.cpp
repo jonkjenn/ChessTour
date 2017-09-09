@@ -1,8 +1,12 @@
+#include "chesshelper.h"
 #include "livematchsqlmodel.h"
 #include "sqlhelper.h"
+
 #include <QSqlQuery>
 #include <QSqlError>
 #include <QDebug>
+#include <QJsonArray>
+#include <QJsonDocument>
 
 LiveMatchSqlModel::LiveMatchSqlModel(QObject *parent, QSqlDatabase &database):QAbstractListModel(parent),database(database){
     QSqlQuery q(database);
@@ -19,7 +23,9 @@ LiveMatchSqlModel::LiveMatchSqlModel(QObject *parent, QSqlDatabase &database):QA
     }
 }
 
-void LiveMatchSqlModel::possibleUpdates(const QVariantList &rounds){
+//TODO: Improve this mess
+void LiveMatchSqlModel::possibleUpdates(int tournamentPk, const QVariantList &rounds){
+    if(tournamentPk != tournamentPk){return;}
     for(auto round:rounds){
         for(auto game:round.toList()){
         QVariantList gameData = game.toList();
@@ -38,7 +44,7 @@ void LiveMatchSqlModel::possibleUpdates(const QVariantList &rounds){
                 auto role = gameData.at(i).toString();
                 if(columnToRoleId.contains(role)){
                     roles.append(columnToRoleId.value(role));
-                    if(role == "EngineScore"){
+                    /*if(role == "EngineScore"){
                         //Since we have dont have access to the currently shown EngineScore in the view,
                         //a TempEngineScore is used to maintain the columns for the current EngineScore
                         // and PreviousEngineScore. Same for engine mate.
@@ -68,7 +74,8 @@ void LiveMatchSqlModel::possibleUpdates(const QVariantList &rounds){
                                                ,{{"Id",matchPk.toInt()}});
 
                         roles.append(columnToRoleId.value("PreviousEngineMate"));
-                    }
+                    }*/
+
                 }
             }
             emit dataChanged(index(row),index(row),roles);
@@ -151,6 +158,7 @@ void LiveMatchSqlModel::onCurrentRoundChanged(InternalMessages::RoundChangedData
         if(m_currentGameNumber>0){
             gameNumber = std::optional<int>(m_currentGameNumber);
         }
+        m_currentTournamentPk = tournamentData.value().pk;
     }
     else{
         m_currentGameNumber = 0;

@@ -5,11 +5,6 @@
 #include <QSqlDatabase>
 #include <optional>
 
-#include "tournamentssqlmodel.h"
-#include "roundssqlmodel.h"
-#include "livematchsqlmodel.h"
-#include "chess24messageparser.h"
-
 class QJsonObject;
 class Chess24Manager;
 

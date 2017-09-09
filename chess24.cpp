@@ -4,6 +4,7 @@
 #include <iostream>
 #include <QJsonDocument>
 #include <optional>
+#include "disknetworkcookiejar.h"
 
 const QString Chess24::loginurl = "https://chess24.com/en/login";
 
@@ -18,7 +19,7 @@ Chess24::Chess24(QObject *parent,QNetworkAccessManager &qnam):QObject(parent),qn
 {
 }
 
-void Chess24::login(QString username, QString password)
+void Chess24::onTryLogin(QString username, QString password)
 {
     //Load the login page so we can get the CSRF code to perform login
     QNetworkReply *reply = qnam.get(QNetworkRequest(Chess24::loginurl));
@@ -26,7 +27,7 @@ void Chess24::login(QString username, QString password)
     //connect(&qnam,&QNetworkAccessManager::sslErrors,this,&Chess24::sslErrors);
 }
 
-void Chess24::checkLoggedIn(UserData::LoginSource source)
+void Chess24::onCheckLoggedIn(UserData::LoginSource source)
 {
     downloadUserData(source);
 }
@@ -80,6 +81,12 @@ void Chess24::downloadUserData(UserData::LoginSource source){
             qDebug() << data;
             UserData udat = getUserData(data);
             udat.loginSource = source;
+
+            if(udat.loginSource == UserData::LoginSource::USERPASS){
+                DiskNetworkCookieJar *jar = static_cast<DiskNetworkCookieJar*>(qnam.cookieJar());
+                jar->saveCookieJar();
+            }
+
             emit loginResult(udat);
             urep->deleteLater();
         });

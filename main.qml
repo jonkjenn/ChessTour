@@ -5,12 +5,19 @@ import QtQml.Models 2.2
 import QtQuick.Dialogs 1.2
 import QtQuick.Controls.Material 2.2
 import QtQuick.Controls.Styles 1.4
+import QtMultimedia 5.9
 
 ApplicationWindow {
     visible: true
     title: qsTr("Chess tournament viewer")
     objectName: "appWindow"
     Material.foreground: "White"
+
+    Audio {
+        id: playMusic
+        source: "qrc:///ding.wav"
+        volume: volumeSlider.volume
+    }
 
     RowLayout{
         anchors.fill: parent
@@ -23,15 +30,15 @@ ApplicationWindow {
             id:showButton
             Layout.maximumWidth: 20
             width: 20
-        Button{
-            Layout.margins: 0
-            implicitHeight: 40
-            anchors.verticalCenter: parent.verticalCenter
-            x: -implicitWidth/2
-            rotation: 90
-            text:qsTr("Show")
-            onClicked: {tournamentColumn.visible = true;showButton.visible = false;}
-        }
+            Button{
+                Layout.margins: 0
+                implicitHeight: 40
+                anchors.verticalCenter: parent.verticalCenter
+                x: -implicitWidth/2
+                rotation: 90
+                text:qsTr("Show")
+                onClicked: {tournamentColumn.visible = true;showButton.visible = false;}
+            }
         }
 
         ColumnLayout{
@@ -51,23 +58,24 @@ ApplicationWindow {
                 Layout.fillWidth: true
                 Layout.preferredWidth: tournamentList.width
                 implicitHeight: 40
-            Button{
-                implicitHeight: parent.height
-                implicitWidth: 90
-                id: control
-                text: qsTr("Refresh")
-                onClicked:tournamentController.refreshTournamentList()
-                opacity: tournamentController.canRefreshTournamentList?1:0.3
-            }
 
-            Button{
-                implicitHeight: parent.height
-                implicitWidth: 90
-                id: hideButton
-                text: qsTr("Hide")
-                onClicked:{tournamentColumn.visible = false;showButton.visible = true;}
-                anchors.right: parent.right
-            }
+                Button{
+                    implicitHeight: parent.height
+                    implicitWidth: 90
+                    id: control
+                    text: qsTr("Refresh")
+                    onClicked:tournamentController.refreshTournamentList()
+                    opacity: tournamentController.canRefreshTournamentList?1:0.3
+                }
+
+                Button{
+                    implicitHeight: parent.height
+                    implicitWidth: 90
+                    id: hideButton
+                    text: qsTr("Hide")
+                    onClicked:{tournamentColumn.visible = false;showButton.visible = true;}
+                    anchors.right: parent.right
+                }
             }
 
             TournamentList{
@@ -108,6 +116,36 @@ ApplicationWindow {
                     height: roundRow.height
                     anchors.verticalCenter: roundRow.verticalCenter
                 }
+
+                Button{
+                    id:volumeOffButton
+                            width: 32
+                            height: 32
+                        background: Image{
+                            id:volumeButtonImage
+                            source: volumeSlider.volume>0?"qrc:///speaker.png":"qrc:///speakeroff.png";
+                            sourceSize.height: 32
+                            sourceSize.width: 32
+                        }
+                        onClicked: if(volumeSlider.volume>0){
+                                       volumeSlider.previousVolume = volumeSlider.value;
+                                       volumeSlider.value=0;
+                                   }else{
+                                       volumeSlider.value = volumeSlider.previousVolume;
+                                   }
+                    }
+
+
+                    Slider {
+                        anchors.verticalCenter: volumeOffButton.verticalCenter
+                        id: volumeSlider
+                        implicitWidth: 75
+                        implicitHeight: 32
+                        property real volume: QtMultimedia.convertVolume(volumeSlider.value,
+                                                              QtMultimedia.LogarithmicVolumeScale,
+                                                                         QtMultimedia.LinearVolumeScale)
+                        property real previousVolume: 0.1
+                    }
                 Button{
                     implicitHeight: 50
                     implicitWidth: 90
@@ -136,57 +174,57 @@ ApplicationWindow {
                     text: "Games: "
                 }
 
-            ListView{
-                id:gameSelectList
-                orientation: ListView.Horizontal
-                Layout.fillWidth: true
-                model:gameSelectModel
-                height: 30
+                ListView{
+                    id:gameSelectList
+                    orientation: ListView.Horizontal
+                    Layout.fillWidth: true
+                    model:gameSelectModel
+                    height: 30
 
-                delegate: ItemDelegate{
-                    id: gameSelectControl
-                    height: gameSelectList.height
-                    width: 30
+                    delegate: ItemDelegate{
+                        id: gameSelectControl
+                        height: gameSelectList.height
+                        width: 30
 
-                    contentItem:
-                                Label{
-                                    text: gameNumber
-                                    font.pixelSize: 20
-                                    verticalAlignment: Label.AlignVCenter
-                                    horizontalAlignment: Label.AlignHCenter
-                                    }
+                        contentItem:
+                            Label{
+                            text: gameNumber
+                            font.pixelSize: 20
+                            verticalAlignment: Label.AlignVCenter
+                            horizontalAlignment: Label.AlignHCenter
+                        }
 
-                    background: Rectangle{
-                        color: if(index === gameSelectList.currentIndex){
-                                   return Material.color(Material.Amber);
-                               }else{
-                                   if(gameSelectMA.containsMouse){
-                                   return Material.color(Material.Grey)
+                        background: Rectangle{
+                            color: if(index === gameSelectList.currentIndex){
+                                       return Material.color(Material.Amber);
+                                   }else{
+                                       if(gameSelectMA.containsMouse){
+                                           return Material.color(Material.Grey)
+                                       }
+                                       return "transparent"
                                    }
-                                   return "transparent"
-                               }
-                        border.width: 2
-                        border.color:
-                            if(matchSqlModel.currentGameNumber()===index+1
-                                    && control.highlighted
-                                    ){
-                                  return "#7af442";
-                              }else{
-                                  return "transparent";
-                              }
-                    }
+                            border.width: 2
+                            border.color:
+                                if(matchSqlModel.currentGameNumber()===index+1
+                                        && control.highlighted
+                                        ){
+                                    return "#7af442";
+                                }else{
+                                    return "transparent";
+                                }
+                        }
 
-        MouseArea {
-            id:gameSelectMA
-            anchors.fill: parent
-            onClicked: {
-                        matchSqlModel.setCurrentGameNumber(gameNumber)
-                        gameSelectList.currentIndex = index
-            }
-            hoverEnabled: true
-        }
+                        MouseArea {
+                            id:gameSelectMA
+                            anchors.fill: parent
+                            onClicked: {
+                                matchSqlModel.setCurrentGameNumber(gameNumber)
+                                gameSelectList.currentIndex = index
+                            }
+                            hoverEnabled: true
+                        }
+                    }
                 }
-            }
             }
 
             MatchList{

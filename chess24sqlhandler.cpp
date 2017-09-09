@@ -3,11 +3,13 @@
 #include <QtSql/QSqlError>
 #include <QDebug>
 #include <QJsonObject>
+#include <QJsonDocument>
 #include <QSettings>
 #include <QDateTime>
 #include <optional>
 #include <QMap>
 
+#include "chesshelper.h"
 #include "sqlhelper.h"
 
 namespace MStr{//TODO: replace with string literal of some sort
@@ -32,6 +34,12 @@ using namespace std;
 Chess24SqlHandler::Chess24SqlHandler(QObject *parent)
     :QObject(parent)
 {
+    /*QSqlDatabase db = QSqlDatabase::addDatabase("QSQLITE");
+    db.setDatabaseName(QDir::currentPath() + QDir::separator() + "db.sqlite");
+    if(!db.open()){//TODO::Error handling
+        qDebug() << "Could not open database";
+        return 0;
+    }*/
 }
 
 QVariantList Chess24SqlHandler::getMatchPks(QVariantList Number, QVariantList GameNumber, int roundPk) {
@@ -66,14 +74,58 @@ QVariantList Chess24SqlHandler::insertUpdateMatches(const QVariantList &Number,c
         where.insert("GameNumber",game.value("GameNumber").toInt());
         SqlHelper::updateTable(database,"Match",game,where);
 
+        QVariantList c;
         if(returnChanges){
-            QVariantList c;
             c.append(roundPk);
             c.append(game.value("Number"));
             c.append(game.value("GameNumber"));
             for(auto k:game.keys()){
                 c.append(k);
             }
+        }
+        if(game.keys().contains("CurrentFEN")){
+            QVariantList pos = ChessHelper::parseFEN(game.value("CurrentFEN").toString()).value("position").toList();
+            SqlHelper::updateTable(database,
+                                   "Match",
+            {{"GamePosition",QJsonDocument::fromVariant(pos).toJson()}}
+                                   ,where);
+            if(returnChanges){
+                c.append("GamePosition");
+            }
+        }
+                    /*if(game.keys().contains("EngineScore")){
+                        //Since we have dont have access to the currently shown EngineScore in the view,
+                        //a TempEngineScore is used to maintain the columns for the current EngineScore
+                        // and PreviousEngineScore. Same for engine mate.
+
+                        //PreviousScore << TempScore
+                        SqlHelper::updateTable(database,"Match",
+                        {{"PreviousEngineScore",engineScore.at(0)}},
+                                               ,{{"Id",matchPk.toInt()}});
+
+                        //TempScore << (new)EngineScore
+                        SqlHelper::updateTable(database,"Match",
+                        {{"TempEngineScore",data(index(row),columnToRoleId.value("EngineScore"))}}
+                                               ,{{"Id",matchPk.toInt()}});
+
+                        roles.append(columnToRoleId.value("PreviousEngineScore"));
+                    }
+                    if(game.keys().contains("EngineMate")){
+
+                        //PreviousScore << TempScore
+                        SqlHelper::updateTable(database,"Match",
+                        {{"PreviousEngineMate",data(index(row),columnToRoleId.value("TempEngineMate"))}}
+                                               ,{{"Id",matchPk.toInt()}});
+
+                        //TempScore << (new)EngineScore
+                        SqlHelper::updateTable(database,"Match",
+                        {{"TempEngineMate",data(index(row),columnToRoleId.value("EngineMate"))}}
+                                               ,{{"Id",matchPk.toInt()}});
+
+                        roles.append(columnToRoleId.value("PreviousEngineMate"));
+                    }*/
+
+        if(returnChanges){
             changes.push_back(c);
         }
     }
@@ -104,6 +156,12 @@ QVariantMap Chess24SqlHandler::insertUpdateRounds(const QVariantList &Number, co
     QVariantMap vals;
     vals.insert("TournamentId",tournamentPk);
     QVariantList pks = SqlHelper::getColumnList(database,"Round","Id",rounds.size(),lists,vals);
+    QVariantList engineScores;
+    QVariantList matchPks;
+    if(pks.size()>0){
+        engineScores = SqlHelper::getColumnList(database,"Match","EngineScore",pks.size(),{{"RoundId",pks}},{});
+        matchPks = SqlHelper::getColumnList(database,"Match","Id",pks.size(),{{"RoundId",pks}},{});
+    }
 
     database.transaction();
 
@@ -132,6 +190,11 @@ QVariantMap Chess24SqlHandler::insertUpdateRounds(const QVariantList &Number, co
         if(returnChanges){
             matchChanges.push_back(mc);
         }
+    }
+
+    //Update all the previous engine scores in batch
+    for(int i=0;i<engineScores.size();++i){
+        SqlHelper::updateTable(database,"Match",{{"PreviousEngineScore",engineScores.at(i)}},{{"Id",matchPks.at(i)}});
     }
 
     database.commit();

@@ -18,12 +18,18 @@ Project{
             "tst_chesstourtests.cpp",
             "../chess24.cpp",
             "../chess24.h",
+            "../chess24sqlhandler.cpp",
+            "../chess24sqlhandler.h",
             "../chess24messages.cpp",
             "../chess24messages.h",
             "../tokencontainer.cpp",
             "../tokencontainer.h",
             "../sqlhelper.h",
-            "../sqlhelper.cpp"
+            "../sqlhelper.cpp",
+            "../disknetworkcookiejar.cpp",
+            "../disknetworkcookiejar.h",
+            "../chesshelper.h",
+            "../chesshelper.cpp"
         ]
 
     Group {     // Properties for the produced executable

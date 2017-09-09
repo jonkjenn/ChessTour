@@ -11,8 +11,22 @@
         <file>ColumnLabel.qml</file>
         <file>NameColumnLabel.qml</file>
         <file>MatchTable.qml</file>
-        <file>ChessTour.qbs.user</file>
         <file>pling.wav</file>
         <file>ding.wav</file>
+        <file>speaker.png</file>
+        <file>speakeroff.png</file>
+        <file>ChessBoard.qml</file>
+        <file>Resources/R.png</file>
+        <file>Resources/r.png</file>
+        <file>Resources/q.png</file>
+        <file>Resources/Q.png</file>
+        <file>Resources/p.png</file>
+        <file>Resources/P.png</file>
+        <file>Resources/n.png</file>
+        <file>Resources/N.png</file>
+        <file>Resources/k.png</file>
+        <file>Resources/K.png</file>
+        <file>Resources/b.png</file>
+        <file>Resources/B.png</file>
     </qresource>
 </RCC>

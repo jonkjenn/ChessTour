@@ -16,17 +16,16 @@
 #include "chess24.h"
 
 class PrepareChess24WS;
-class Chess24Login;
 
-class QNetworkAccessManager;
 class QNetworkReply;
 class Message;
+class TokenContainer;
 
 class Chess24Websocket: public QObject
 {
     Q_OBJECT
 public:
-    Chess24Websocket(QObject *,const QNetworkAccessManager &,const Chess24Login &, PrepareChess24WS &);
+    Chess24Websocket(QObject *, QWebSocket &ws, PrepareChess24WS &, TokenContainer &, QTimer &);
     void connectWS(QString notificationServer, QString wssId);
     bool isConnected();
 
@@ -51,25 +50,23 @@ signals:
      void connected();
      void messageReceived(QString);
 public slots:
-     void onLoggedInChanged();
+     void onUserdataChanged(UserData data);
 
 private:
-     QTimer tokenTimer;
-     QTimer msgQTimer;
-     int maxTokens = 2;
-     int tokens = 2;
+     TokenContainer &token;
+     QTimer &msgQTimer;
+     //int maxTokens = 2;
+     //int tokens = 2;
      QQueue<QString> msgQ;
      bool loggedIn = false;
 
     int messageId();
-    const QNetworkAccessManager &qnam;
     UserData userData;
     QMap<int,WSRequest*> requests;
 
-    const Chess24Login &chess24Login;
     PrepareChess24WS &prepWS;
 
-    QWebSocket ws;
+    QWebSocket &ws;
     int m_messageId = 1;
 
     bool m_isConnected = false;

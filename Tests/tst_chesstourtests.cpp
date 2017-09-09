@@ -12,6 +12,8 @@
 #include "../tokencontainer.h"
 #include "../sqlhelper.h"
 
+#include "../chesshelper.h"
+
 #include "testdata.h"
 
 #include <QJsonDocument>
@@ -45,6 +47,9 @@ private slots:
     void test_sqlHelper();
     void test_selectWhere();
     void test_updateTable();
+
+    //Chessboard
+    void test_fenParser();
 
 
     void test_tokenContainer();
@@ -344,6 +349,7 @@ void ChessTourTests::test_sqlHelper()
     }
     QCOMPARE(i,6);
 
+
     QVariantMap whereList;
     whereList.insert("Test1Id",pks);
     QVariantMap whereValues;
@@ -358,6 +364,16 @@ void ChessTourTests::test_sqlHelper()
     whereValues.insert("Value1","eum");
     QVariantList res2 = SqlHelper::getColumnList(db,"Test2","Id",5,whereList,whereValues);
     QCOMPARE(res2.value(0).toInt(),4);
+
+    SqlHelper::insertLists(db,"Test2",
+    {{1,1,1,1,1,1},{"Tt","Bt","Tr","re","we","tt"},{33,13,63,1,5,421,6,1}},
+    {"Test1Id","Value1","Value2"});
+
+    QVariantMap whereList2;
+    QVariantList vals = {1};
+    whereList2.insert("Test1Id",vals);
+    QVariantList res3 = SqlHelper::getColumnList(db,"Test2","Id",1,whereList2,{});
+    QCOMPARE(res3.size(),7);
 
     db.close();
 }
@@ -426,12 +442,48 @@ void ChessTourTests::test_updateTable()
 
     SqlHelper::insertLists(db,"Test2",{{"utest"},{377}},{"Value1","Value2"});
     int i = SqlHelper::updateTable(db,"Test2",{{"Value1","dutest"}},{{"Value1","utest"},{"Value2",377}});
-    qDebug() << i;
 
-    qDebug() << SqlHelper::selectWhere(db,"Test2","Value1",{{"Value2",377}}).toString();
     QVERIFY(SqlHelper::selectWhere(db,"Test2","Value1",{{"Value2",377}}).toString() == "dutest");
 
     db.close();
+}
+
+void ChessTourTests::test_fenParser()
+{
+    QString fen ="3rbbnr/p1k1ppp1/2p4p/3p4/3p2N1/4P3/PPP2PPP/RN1QK2R w KQ - 0 12";
+    QVariantMap map = ChessHelper::parseFEN(fen);
+
+    QVariantList  pos = map.value("position").toList();
+    //QVERIFY(pos.size() == 27);
+    QVERIFY(pos.at(0) == "r");
+    QVERIFY(pos.at(1) == 3);
+    QVERIFY(pos.at(2) == 7);
+
+    QVERIFY(pos.at(3) == "b");
+    QCOMPARE(pos.at(4).toInt() , 4);
+    QCOMPARE(pos.at(5).toInt() , 7);
+
+    QVERIFY(pos.at(6) == "b");
+    QCOMPARE(pos.at(7).toInt()   , 5);
+    QCOMPARE(pos.at(8).toInt()  , 7);
+
+    QVERIFY(pos.at(30) == "p");
+    QCOMPARE(pos.at(31).toInt()  , 2);
+    QCOMPARE(pos.at(32).toInt()  , 5);
+
+    QVERIFY(map.value("tomove").toString() == "w");
+    QVERIFY(map.value("castle").toString() == "KQ");
+    QVERIFY(map.value("enpassant").toString() == "-");
+    QCOMPARE(map.value("halfmove").toInt() , 0);
+    QCOMPARE(map.value("fullmove").toInt() , 12);
+
+    QString fen2 = "rnbqkbnr/pppppppp/8/8/3P4/8/PPP1PPPP/RNBQKBNR b KQkq - 0 1";
+    QVariantMap map2 = ChessHelper::parseFEN(fen2);
+    QVariantList pos2 = map2.value("position").toList();
+    int i = pos2.indexOf("Q");
+    QCOMPARE(pos2.at(i+1).toInt(),3);
+    QCOMPARE(pos2.at(i+2).toInt(),0);
+
 }
 
 void ChessTourTests::test_getData()
@@ -457,36 +509,36 @@ void ChessTourTests::test_getHeader()
 }
 
 void ChessTourTests::test_tokenContainer(){
-    QTimer timer(nullptr);
-    timer.setInterval(0);
-    timer.setSingleShot(true);
-    TokenContainer t(nullptr,timer,5);
+    QTimer *timer = new QTimer();
+    timer->setInterval(0);
+    timer->setSingleShot(true);
+    TokenContainer t(nullptr,*timer,5);
     QSignalSpy spy(&t,SIGNAL(notifyTokenAvailableChanged(bool)));
 
     QVERIFY(t.getToken() == false);
     QVERIFY(t.getToken() == false);
     QVERIFY(t.getToken() == false);
-    timer.start();
+    timer->start();
     QCoreApplication::processEvents();
     QCOMPARE(spy.count() , 1);
     QVERIFY(t.getToken() == true);
     QCOMPARE(spy.count() , 2);
     QVERIFY(t.getToken() == false);
-    timer.start();
+    timer->start();
     QCoreApplication::processEvents();
     QCOMPARE(spy.count() , 3);
     QVERIFY(t.getToken() == true);
     QCOMPARE(spy.count() , 4);
     QVERIFY(t.getToken() == false);
-    timer.start();
+    timer->start();
     QCoreApplication::processEvents();
-    timer.start();
+    timer->start();
     QCoreApplication::processEvents();
-    timer.start();
+    timer->start();
     QCoreApplication::processEvents();
-    timer.start();
+    timer->start();
     QCoreApplication::processEvents();
-    timer.start();
+    timer->start();
     QCoreApplication::processEvents();
     QCOMPARE(spy.count() , 5);
     QVERIFY(t.getToken() == true);//1
@@ -497,19 +549,22 @@ void ChessTourTests::test_tokenContainer(){
     QCOMPARE(spy.count() , 6);
     QVERIFY(t.getToken() == false);//5
 
-    TokenContainer t2(nullptr,timer,1);
+    QTimer *timer2  =new QTimer();
+    timer2->setInterval(0);
+    timer2->setSingleShot(true);
+    TokenContainer t2(nullptr,*timer2,1);
     QSignalSpy spy2(&t2,SIGNAL(notifyTokenAvailableChanged(bool)));
     QVERIFY(t2.getToken() == false);
     QVERIFY(t2.getToken() == false);
-    timer.start();
+    timer2->start();
     QCoreApplication::processEvents();
     QCOMPARE(spy2.count() , 1);
     QVERIFY(t2.getToken() == true);
     QCOMPARE(spy2.count() , 2);
     QVERIFY(t2.getToken() == false);
-    timer.start();
+    timer2->start();
     QCoreApplication::processEvents();
-    timer.start();
+    timer2->start();
     QCoreApplication::processEvents();
     QCOMPARE(spy2.count() , 3);
     QVERIFY(t2.getToken() == true);

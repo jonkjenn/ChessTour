@@ -9,10 +9,10 @@
 #include "chess24messages.h"
 #include "chess24login.h"
 #include "preparechess24ws.h"
+#include "tokencontainer.h"
 
-
-Chess24Websocket::Chess24Websocket(QObject *parent, const QNetworkAccessManager &qnam, const Chess24Login &chess24Login, PrepareChess24WS &prepWS):
-    QObject (parent),qnam(qnam), prepWS(prepWS), chess24Login(chess24Login)
+Chess24Websocket::Chess24Websocket(QObject *parent, QWebSocket &ws, PrepareChess24WS &prepWS, TokenContainer &token, QTimer &msgQTimer):
+    QObject (parent),ws(ws), prepWS(prepWS), token(token), msgQTimer(msgQTimer)
 {
     connect(&ws,&QWebSocket::connected,this,&Chess24Websocket::onConnected);
     connect(&ws,&QWebSocket::disconnected,this,&Chess24Websocket::onDisconnected);
@@ -23,17 +23,21 @@ Chess24Websocket::Chess24Websocket(QObject *parent, const QNetworkAccessManager 
 
     connect(&prepWS,&PrepareChess24WS::success,this,&Chess24Websocket::connectWS);
 
-    tokenTimer.setInterval(2000);
+    token.setParent(this);
+    msgQTimer.setParent(this);
+    connect(&msgQTimer,&QTimer::timeout,this,&Chess24Websocket::send);
+    ws.setParent(this);
+
+    /*tokenTimer.setInterval(2000);
     connect(&tokenTimer,&QTimer::timeout,[this]{
         if(tokens<maxTokens){
             tokens += 1;
         }
     });
-    tokenTimer.start();
+    tokenTimer.start();*/
 
-    msgQTimer.setInterval(1000);
-    connect(&msgQTimer,&QTimer::timeout,this,&Chess24Websocket::send);
-    msgQTimer.start();
+    /*msgQTimer.setInterval(1000);
+    msgQTimer.start();*/
 
 }
 
@@ -52,10 +56,10 @@ bool Chess24Websocket::isConnected()
     return sendMessage(Chess24Messages::getTouramentIds(m_messageId));
 }*/
 
-void Chess24Websocket::onLoggedInChanged()
+void Chess24Websocket::onUserdataChanged(UserData data)
 {
-    if(chess24Login.loggedIn()){
-        userData = chess24Login.userData();
+    if(data.result){
+        userData = data;
         prepWS.start();
         loggedIn = true;
     }else{
@@ -64,9 +68,8 @@ void Chess24Websocket::onLoggedInChanged()
 }
 
 void Chess24Websocket::send(){
-    if(tokens>0){
+    if(token.getToken()){
         if(msgQ.size()>0){
-            tokens -= 1;
             qDebug() << "Sending message: " << msgQ.at(0);
             ws.sendTextMessage(msgQ.dequeue());
         }

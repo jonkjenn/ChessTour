@@ -20,10 +20,8 @@
 #include "disknetworkcookiejar.h"
 
 
-Chess24Login::Chess24Login(QObject *parent,
-                         const QNetworkAccessManager &qnam,
-                         Chess24 &c24):
-    QObject(parent), qnam(qnam), c24(c24)
+Chess24Login::Chess24Login(QObject *parent)
+    :QObject(parent)
 {
 }
 
@@ -32,8 +30,8 @@ void Chess24Login::start(){
     //Try login from cookie
 
     qDebug() << "Trying login from cookie";
-    connect(&c24,&Chess24::loginResult,this,&Chess24Login::loginResult);
-    c24.checkLoggedIn(UserData::LoginSource::COOKIE);
+    //connect(&c24,&Chess24::loginResult,this,&Chess24Login::loginResult);
+    emit checkLoggedIn(UserData::LoginSource::COOKIE);
 
 /*    connect(&prepc24,&PrepareChess24WS::failure,[](QString error){
        qDebug() << "Connecting to WS failed";
@@ -85,7 +83,7 @@ UserData Chess24Login::userData() const{
     return m_userData;
 }
 
-void Chess24Login::loginResult(UserData data)
+void Chess24Login::onLoginResult(UserData data)
 {
     bool was_loggedIn = loggedIn();
     m_userData = data;
@@ -93,24 +91,22 @@ void Chess24Login::loginResult(UserData data)
     if(m_userData.isRegistered){
         qDebug() << "Logged in";
         setLoggedIn(true);
-        if(m_userData.loginSource == UserData::LoginSource::USERPASS){
-            DiskNetworkCookieJar *jar = static_cast<DiskNetworkCookieJar*>(qnam.cookieJar());
-            jar->saveCookieJar();
-        }
     }else{
         qDebug() << "Login failed";
         setLoggedIn(false);
     }
 
     if(loggedIn() != was_loggedIn){
-        emit loggedInChanged();
+        emit loggedInChanged(loggedIn());
+        emit userDataChanged(data);
     }
 }
 
 void Chess24Login::login(QString username, QString password)
 {
     //Try with username and password if cookie didnt work
-    c24.login(username,password);
+    //c24.login(username,password);
+    emit tryLogin(username,password);
 }
 
 /*void Chess24Login::handleMessage(Message msg)

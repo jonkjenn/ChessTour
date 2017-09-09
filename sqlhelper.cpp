@@ -89,6 +89,42 @@ QVariant SqlHelper::selectWhere(const QSqlDatabase db, QString table, QString co
     return q.value(0);
 }
 
+QVariantMap SqlHelper::selectWhere(const QSqlDatabase db, QString table, QStringList columns, QVariantMap where)
+{
+    QSqlQuery q(db);
+
+    QString sql = "select ";
+    for(auto column:columns){
+        sql.append(column);
+        if(column!=columns.back()){
+            sql.append(",");
+        }
+    }
+    sql.append(" from " + table + " ");
+
+    if(where.size()>0){sql.append("where ");}
+
+    for(auto k:where.keys()){
+        sql.append(k + " = :" + k + " ");
+        if(k != where.keys().back()){
+            sql.append("and ");
+        }
+    }
+
+    q.prepare(sql);
+    for(auto k:where.keys()){
+        q.bindValue(":"+k,where.value(k));
+    }
+
+    if(!q.exec()){qDebug() << q.lastError();}
+    QVariantMap res;
+    if(!q.next()){return res;}
+    for(int i=0;i<columns.size();++i){
+        res.insert(columns.at(i),q.value(i));
+    }
+    return res;
+}
+
 QVector<int> SqlHelper::selectMatchIds(const QSqlDatabase db, int roundPk, std::optional<int> gameNumber)
 {
     QSqlQuery q(db);
@@ -184,7 +220,7 @@ int SqlHelper::updateTable(const QSqlDatabase &database, QString table, const QV
         return update.numRowsAffected();
 }
 
-QVariantList SqlHelper::getColumnList(const QSqlDatabase &database, QString table, QString column, int listSize, QVariantMap &whereLists, QVariantMap &whereValues){
+QVariantList SqlHelper::getColumnList(const QSqlDatabase &database, QString table, QString column, int listSize, QVariantMap whereLists, QVariantMap whereValues){
     QVariantList out;
     if(listSize>0){
         for(int i=0;i<listSize;++i){
@@ -224,7 +260,7 @@ QVariantList SqlHelper::getColumnList(const QSqlDatabase &database, QString tabl
             }
 
             if(!q.exec()){qDebug() << q.lastError(); qDebug() << q.executedQuery();}
-            if(q.next()){
+            while(q.next()){
                 out.append(q.value(0));
             }
         }

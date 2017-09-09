@@ -21,7 +21,6 @@ public:
     QHash<int, QByteArray> roleNames() const override;
 
     int currentRoundPk();
-    void possibleUpdates(const QVariantList &map);
     Q_INVOKABLE QString eventType() const;
     Q_INVOKABLE int gamesPerMatch() const;
     Q_INVOKABLE void setCurrentGameNumber(int gameNumber);
@@ -30,6 +29,7 @@ public:
     void updateData(int roundPk, std::optional<int> gameNumber=std::nullopt);
 public slots:
     void onCurrentRoundChanged(InternalMessages::RoundChangedData roundData, std::optional<InternalMessages::TournamentChangedData> tournamentData);
+    void possibleUpdates(int tournamentPk, const QVariantList &map);
 
 private:
     int rowFromMatchAndGameNumber(int matchNumber, int gameNumber);
@@ -43,8 +43,8 @@ private:
     QHash<int,int> rowToPk;
     QHash<int,int> pkToRow;
     int m_currentGameNumber = 0;
-
     int m_gamesPerMatch = 1;
+    int m_currentTournamentPk = -1;
 
 signals:
     void currentRoundLoaded();

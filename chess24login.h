@@ -3,9 +3,8 @@
 
 #include <QObject>
 #include <QQmlEngine>
-
 #include "chess24.h"
-#include "preparechess24ws.h"
+
 #include "message.h"
 
 
@@ -21,9 +20,7 @@ class Chess24Login:public QObject
     Q_PROPERTY(QString username READ username WRITE setUsername NOTIFY usernameChanged)
     Q_PROPERTY(QString password READ password WRITE setPassword NOTIFY passwordChanged)
 public:
-    Chess24Login(QObject *parent,
-                 const QNetworkAccessManager &qnam,
-                 Chess24 &c24);
+    Chess24Login(QObject *parent);
     //QML properties
     QString username();
     QString password();
@@ -40,20 +37,21 @@ private:
     QString m_username;
     QString m_password;
     UserData m_userData;
-    const QNetworkAccessManager &qnam;
-    Chess24 &c24;
 
    signals:
     //Signals to UI
     void usernameChanged();
     void passwordChanged();
-    void loggedInChanged();
+    void loggedInChanged(bool status);
+    void userDataChanged(UserData data);
+    void tryLogin(QString username, QString password);
+    void checkLoggedIn(UserData::LoginSource);
 
     //Signals
     void result(UserData);
 
 public slots:
-    void loginResult(UserData data);
+    void onLoginResult(UserData data);
     void login(QString username, QString password);
     //void handleMessage(Message);
 };

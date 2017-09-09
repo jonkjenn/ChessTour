@@ -22,8 +22,7 @@ class Chess24Manager: public QObject
 {
     Q_OBJECT
 public:
-    Chess24Manager(QObject *parent, Chess24Websocket &c24ws, Chess24SqlHandler &sqlHandler,
-                   TournamentsSqlModel &tsm, RoundsSqlModel &rsm, LiveMatchSqlModel &lsm);
+    Chess24Manager(QObject *parent, Chess24Websocket &c24ws);
     void subscribeTournament(QString name);
     void onWebTournamentRedisAR(WebTournamentRedisAR msg);
 
@@ -33,10 +32,6 @@ public:
 
 private:
     Chess24Websocket &c24ws;
-    Chess24SqlHandler &sqlHandler;
-    TournamentsSqlModel &tsm;
-    RoundsSqlModel &rsm;
-    LiveMatchSqlModel &lsm;
     void getTournament(InternalMessages::TournamentChangedData data);
     void getTournamentList();
 };

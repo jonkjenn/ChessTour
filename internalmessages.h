@@ -1,23 +1,45 @@
 #ifndef INTERNALMESSAGES_H
 #define INTERNALMESSAGES_H
 
+#include <QMetaType>
 #include <QString>
 
 namespace InternalMessages{
 struct TournamentChangedData{
+    TournamentChangedData(){}
+    TournamentChangedData(const TournamentChangedData& data){
+        pk = data.pk;
+        currentRoundIndex = data.currentRoundIndex;
+        currentGame = data.currentGame;
+        name = data.name;
+        eventType = data.eventType;
+        subscribed = data.subscribed;
+    }
+    ~TournamentChangedData(){}
     TournamentChangedData(int pk, int currentRoundIndex, QString name, QString eventType, bool subscribed):pk(pk),currentRoundIndex(currentRoundIndex),name(name),eventType(eventType),subscribed(subscribed){}
-    const int pk;
-    const int currentRoundIndex = 1;
+    int pk;
+    int currentRoundIndex = 1;
     int currentGame = 1;
-    const QString name;
-    const QString eventType;
-    const bool subscribed;
-};
+    QString name;
+    QString eventType;
+    bool subscribed;
+};}
+Q_DECLARE_METATYPE(InternalMessages::TournamentChangedData)
+
+namespace InternalMessages {
 struct RoundChangedData{
+    RoundChangedData(){}
+    RoundChangedData(const RoundChangedData& data){
+        pk = data.pk;
+        gamesPerMatch = data.gamesPerMatch;
+    }
+    ~RoundChangedData(){}
     RoundChangedData(int pk, int gamesPerMatch = 1):pk(pk),gamesPerMatch(gamesPerMatch){}
-    const int pk;
-    const int gamesPerMatch;
+    int pk;
+    int gamesPerMatch;
 };
 }
+
+Q_DECLARE_METATYPE(InternalMessages::RoundChangedData)
 
 #endif // INTERNALMESSAGES_H

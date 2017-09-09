@@ -20,6 +20,9 @@ struct UserData{
     LoginSource loginSource;
 };
 
+Q_DECLARE_METATYPE(UserData)
+Q_DECLARE_METATYPE(UserData::LoginSource)
+
 class Chess24: public QObject
 {
     Q_OBJECT
@@ -30,11 +33,12 @@ private:
     void httpFinished(QNetworkReply *, QString username, QString password);
     static std::optional<QString> getCSRF(QString source);
     static UserData getUserData(const QByteArray &data);
-    void downloadUserData(UserData::LoginSource login = UserData::LoginSource::COOKIE);
+    void downloadUserData(UserData::LoginSource onTryLogin = UserData::LoginSource::COOKIE);
 public:
     Chess24(QObject *parent,QNetworkAccessManager &);
-    void login(QString username, QString password);
-    void checkLoggedIn(UserData::LoginSource source);
+public slots:
+    void onCheckLoggedIn(UserData::LoginSource source);
+    void onTryLogin(QString username, QString password);
 private slots:
     void redirected(const QUrl &);
     void gotError(QNetworkReply::NetworkError);

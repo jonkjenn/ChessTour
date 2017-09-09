@@ -2,20 +2,27 @@ import QtQuick 2.0
 import QtQuick.Controls 2.2
 import QtQuick.Controls.Material 2.2
 import QtMultimedia 5.9
+import QtQuick.Layouts 1.3
 
-ListView{
+GridView{
     focus:true
     id:matchesView
     clip:true
     model:matchSqlModel
+    cellHeight: boardSize+4
+    cellWidth: 750
+    property int columns: 1
+    property int boardSize: 128
     //visible:model.rootIndex.valid
-    Audio {
-        id: playMusic
-        source: "qrc:///ding.wav"
+
+    onWidthChanged: {
+
+        columns = Math.max(1,Math.floor(width/cellWidth));
+        console.log("COLUMNS: " + columns);
     }
 
     header: Item{
-        implicitWidth: 600;
+        implicitWidth: 550;
         implicitHeight: 35
         Row{
             anchors.left: parent.left
@@ -52,12 +59,12 @@ ListView{
     delegate:ItemDelegate{
         background: Rectangle{
             id:matchRowBack
-            implicitWidth: 600;
-            implicitHeight: 35
-            color:index%2==0?"#3E3E3E":"#2E2E2E"
+            implicitWidth: 548;
+            implicitHeight: chessBoard.height
+            color:Math.floor(index/matchesView.columns)%2==0?"#3E3E3E":"#2E2E2E"
         }
 
-        Row{
+        RowLayout{
             id:matchDataRow
             anchors.left: parent.left
             anchors.leftMargin: 5
@@ -66,23 +73,23 @@ ListView{
             NameColumnLabel{
                 text:whitefide
                 color: resultwhite>0.5?Material.color(Material.Amber):Material.foreground
-                width: 150
+                Layout.preferredWidth: 150
             }
             NameColumnLabel{
                 text:blackfide
                 color: resultblack>0.5?Material.color(Material.Amber):Material.foreground
-                width: 150
+                Layout.preferredWidth: 150
             }
             ColumnLabel{
                 text:resultwhite
-                width: 35
+                Layout.preferredWidth: 35
             }
             ColumnLabel{
                 text:resultblack
-                width: 35
+                Layout.preferredWidth: 35
             }
             Item{
-                width: 50
+                Layout.preferredWidth: 50
                 height: parent.height
 
                 Rectangle{
@@ -142,7 +149,7 @@ ListView{
                 }*/
 
 
-                width: 50
+                Layout.preferredWidth: 50
                 onTextChanged:{
                     if(changes>=1){
                         engineBorder.border.color = Material.color(Material.Amber)
@@ -185,8 +192,44 @@ ListView{
             }
             ColumnLabel{
                 text:status
-                width: 70
+                Layout.preferredWidth: 70
             }
+            /*Text{
+                id:gamePosition
+                visible: false
+                width: 50
+                text: gameposition
+
+                onTextChanged: {
+                    var pos = JSON.parse(gameposition);
+                }
+            }*/
+
+            ChessBoard{
+                id:chessBoard
+                Layout.preferredWidth:boardSize
+                Layout.preferredHeight:boardSize
+
+                Component.onCompleted:{
+                    var pos = JSON.parse(gameposition);
+
+                    for(var i=0;i<pos.length;i+=3){
+                        /*console.log(pos[i+1]+pos[i+2]*7);
+                        console.log("x: " + pos[i+1] + " y:" + (pos[i+2]*7));
+                        console.log(chessBoard.children[0]);
+                        console.log(chessBoard.children[0].rows);
+                        console.log(chessBoard.children[0].columns);
+                        console.log(chessBoard.children[0].children[0]);
+                       console.log(chessBoard.children[0].children[pos[i+1]+pos[i+2]*7].children[0]);*/
+
+                        chessBoard.children[0].children[pos[i+1]+pos[i+2]*8].children[0].source ="qrc:///Resources/"+ pos[i] + ".png";
+
+
+                        //chessBoard.board.itemAt(pos[i+1]+pos[i+2]*7).children[0].source = "qrc:///Resources/"+ pos[i] + ".png";
+                    }
+                }
+            }
+
             /*ColumnLabel{
                 text:previousenginemate==""?previousenginescore/100.0:"#"+previousenginemate
                 width: 50
