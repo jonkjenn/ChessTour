@@ -93,37 +93,6 @@ QVariantList Chess24SqlHandler::insertUpdateMatches(const QVariantList &Number,c
                 c.append("GamePosition");
             }
         }
-                    /*if(game.keys().contains("EngineScore")){
-                        //Since we have dont have access to the currently shown EngineScore in the view,
-                        //a TempEngineScore is used to maintain the columns for the current EngineScore
-                        // and PreviousEngineScore. Same for engine mate.
-
-                        //PreviousScore << TempScore
-                        SqlHelper::updateTable(database,"Match",
-                        {{"PreviousEngineScore",engineScore.at(0)}},
-                                               ,{{"Id",matchPk.toInt()}});
-
-                        //TempScore << (new)EngineScore
-                        SqlHelper::updateTable(database,"Match",
-                        {{"TempEngineScore",data(index(row),columnToRoleId.value("EngineScore"))}}
-                                               ,{{"Id",matchPk.toInt()}});
-
-                        roles.append(columnToRoleId.value("PreviousEngineScore"));
-                    }
-                    if(game.keys().contains("EngineMate")){
-
-                        //PreviousScore << TempScore
-                        SqlHelper::updateTable(database,"Match",
-                        {{"PreviousEngineMate",data(index(row),columnToRoleId.value("TempEngineMate"))}}
-                                               ,{{"Id",matchPk.toInt()}});
-
-                        //TempScore << (new)EngineScore
-                        SqlHelper::updateTable(database,"Match",
-                        {{"TempEngineMate",data(index(row),columnToRoleId.value("EngineMate"))}}
-                                               ,{{"Id",matchPk.toInt()}});
-
-                        roles.append(columnToRoleId.value("PreviousEngineMate"));
-                    }*/
 
         if(returnChanges){
             changes.push_back(c);
@@ -139,7 +108,7 @@ QVariantMap Chess24SqlHandler::insertUpdateRounds(const QVariantList &Number, co
 
     QVariantMap changes;
     QVariantList roundChanges;
-    QVariantList matchChanges;
+    QVariantMap matchChanges;
 
     QVector<QVariant> pkVector = QVector<QVariant>(Number.size(),QVariant::fromValue(tournamentPk));
     QVariantList pkList = QList<QVariant>::fromVector(pkVector);
@@ -150,17 +119,16 @@ QVariantMap Chess24SqlHandler::insertUpdateRounds(const QVariantList &Number, co
                             {"Number","TournamentId"}
                 );
 
-    //QVariantList pks = getRoundPk(Number,tournamentPk);
     QVariantMap lists;
     lists.insert("Number", Number);
     QVariantMap vals;
     vals.insert("TournamentId",tournamentPk);
     QVariantList pks = SqlHelper::getColumnList(database,"Round","Id",rounds.size(),lists,vals);
     QVariantList engineScores;
-    QVariantList matchPks;
+    QVariantList engineMatchPks;
     if(pks.size()>0){
         engineScores = SqlHelper::getColumnList(database,"Match","EngineScore",pks.size(),{{"RoundId",pks}},{});
-        matchPks = SqlHelper::getColumnList(database,"Match","Id",pks.size(),{{"RoundId",pks}},{});
+        engineMatchPks = SqlHelper::getColumnList(database,"Match","Id",pks.size(),{{"RoundId",pks}},{});
     }
 
     database.transaction();
@@ -188,20 +156,35 @@ QVariantMap Chess24SqlHandler::insertUpdateRounds(const QVariantList &Number, co
                     returnChanges
                     );
         if(returnChanges){
-            matchChanges.push_back(mc);
+            matchChanges.insert(pks.at(i).toString(),mc);
         }
     }
 
     //Update all the previous engine scores in batch
     for(int i=0;i<engineScores.size();++i){
-        SqlHelper::updateTable(database,"Match",{{"PreviousEngineScore",engineScores.at(i)}},{{"Id",matchPks.at(i)}});
+        SqlHelper::updateTable(database,"Match",{{"PreviousEngineScore",engineScores.at(i)}},{{"Id",engineMatchPks.at(i)}});
     }
 
     database.commit();
 
     if(returnChanges){
+        QVariantMap matchPks;
+        //Add match pks
+        for(size_t i=0;i<rounds.keys().size();++i){
+            QVariantMap round = rounds.value(rounds.keys().at(i)).toMap();
+            QVariantMap matchWrapper = round.value("matchWrapper").toMap();
+
+            int pk = pks.at(i).toInt();
+            QVariantList numbers = matchWrapper.value("Number").toList();
+            QVariantList gameNumbers = matchWrapper.value("GameNumber").toList();
+            QVariantList mPks = SqlHelper::getColumnList(database,"Match","Id",numbers.size(),{{"Number",numbers},{"GameNumber",gameNumbers}},{{"RoundId",pk}});
+            matchPks.insert(QString::number(pk),mPks);
+        }
+
+
         changes.insert("round",roundChanges);
         changes.insert("match",matchChanges);
+        changes.insert("matchPks",matchPks);
         return changes;
     }
     return QVariantMap();

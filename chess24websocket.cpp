@@ -8,11 +8,10 @@
 
 #include "chess24messages.h"
 #include "chess24login.h"
-#include "preparechess24ws.h"
 #include "tokencontainer.h"
 
-Chess24Websocket::Chess24Websocket(QObject *parent, QWebSocket &ws, PrepareChess24WS &prepWS, TokenContainer &token, QTimer &msgQTimer):
-    QObject (parent),ws(ws), prepWS(prepWS), token(token), msgQTimer(msgQTimer)
+Chess24Websocket::Chess24Websocket(QObject *parent, QWebSocket &ws, TokenContainer &token, QTimer &msgQTimer):
+    QObject (parent),ws(ws), token(token), msgQTimer(msgQTimer)
 {
     connect(&ws,&QWebSocket::connected,this,&Chess24Websocket::onConnected);
     connect(&ws,&QWebSocket::disconnected,this,&Chess24Websocket::onDisconnected);
@@ -21,23 +20,11 @@ Chess24Websocket::Chess24Websocket(QObject *parent, QWebSocket &ws, PrepareChess
     connect(&ws,static_cast<void(QWebSocket::*)(QAbstractSocket::SocketError)>(&QWebSocket::error),this,&Chess24Websocket::socketError);
     connect(&ws,&QWebSocket::textMessageReceived,this,&Chess24Websocket::onTextReceived);
 
-    connect(&prepWS,&PrepareChess24WS::success,this,&Chess24Websocket::connectWS);
 
     token.setParent(this);
     msgQTimer.setParent(this);
     connect(&msgQTimer,&QTimer::timeout,this,&Chess24Websocket::send);
     ws.setParent(this);
-
-    /*tokenTimer.setInterval(2000);
-    connect(&tokenTimer,&QTimer::timeout,[this]{
-        if(tokens<maxTokens){
-            tokens += 1;
-        }
-    });
-    tokenTimer.start();*/
-
-    /*msgQTimer.setInterval(1000);
-    msgQTimer.start();*/
 
 }
 
@@ -60,7 +47,7 @@ void Chess24Websocket::onUserdataChanged(UserData data)
 {
     if(data.result){
         userData = data;
-        prepWS.start();
+        //prepWS.start();
         loggedIn = true;
     }else{
         loggedIn = false;

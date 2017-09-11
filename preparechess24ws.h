@@ -5,12 +5,16 @@
 #include <QNetworkAccessManager>
 #include <QNetworkReply>
 
+#include "userdata.h"
+
 class PrepareChess24WS:public QObject
 {
     Q_OBJECT
 public:
     PrepareChess24WS(QObject *parent, QNetworkAccessManager &qnam);
     void start();
+public slots:
+    void onUserDataChanged(UserData data);
 private:
     QNetworkAccessManager &qnam;
     void notificationRespons(QNetworkReply *reply);

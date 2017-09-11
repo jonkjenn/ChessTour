@@ -1,29 +1,16 @@
 #ifndef CHESS24_H
 #define CHESS24_H
 
+#include "loginmanager.h"
+
 #include <QObject>
 #include <QNetworkAccessManager>
 #include <QNetworkReply>
 #include <QUrl>
 #include <optional>
 
-struct UserData{
-    enum LoginSource{USERPASS,COOKIE};
-    bool result = false;
-    QString authToken;
-    QString uuid;
-    QString permalink;
-    QString country;
-    QString name;
-    bool isPremium=false;
-    bool isRegistered=false;
-    LoginSource loginSource;
-};
 
-Q_DECLARE_METATYPE(UserData)
-Q_DECLARE_METATYPE(UserData::LoginSource)
-
-class Chess24: public QObject
+class Chess24: public LoginManager
 {
     Q_OBJECT
 private:
@@ -37,14 +24,12 @@ private:
 public:
     Chess24(QObject *parent,QNetworkAccessManager &);
 public slots:
-    void onCheckLoggedIn(UserData::LoginSource source);
-    void onTryLogin(QString username, QString password);
+    void onCheckLoggedIn(UserData::LoginSource source) override;
+    void onTryLogin(QString username, QString password) override;
 private slots:
     void redirected(const QUrl &);
     void gotError(QNetworkReply::NetworkError);
     void sslErrors(QNetworkReply *reply, const QList<QSslError> &errors);
-signals:
-    void loginResult(UserData);
 };
 
 #endif // CHESS24_H

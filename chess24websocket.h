@@ -25,7 +25,7 @@ class Chess24Websocket: public QObject
 {
     Q_OBJECT
 public:
-    Chess24Websocket(QObject *, QWebSocket &ws, PrepareChess24WS &, TokenContainer &, QTimer &);
+    Chess24Websocket(QObject *, QWebSocket &ws, TokenContainer &, QTimer &);
     void connectWS(QString notificationServer, QString wssId);
     bool isConnected();
 
@@ -63,8 +63,6 @@ private:
     int messageId();
     UserData userData;
     QMap<int,WSRequest*> requests;
-
-    PrepareChess24WS &prepWS;
 
     QWebSocket &ws;
     int m_messageId = 1;

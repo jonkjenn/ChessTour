@@ -20,7 +20,7 @@ public:
 signals:
      void messageParsed(Message);
      //void webTournamentRedisAR(WebTournamentRedisAR);
-     void tournamentMatchUpdates(int tournamentPk, const QVariantList &rounds);
+     void tournamentMatchUpdates(int tournamentPk, const QVariantMap &rounds, const QVariantMap &matchPks);
 
    public slots:
     void parseMessage(QString msg);

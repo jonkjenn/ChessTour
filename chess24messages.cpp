@@ -295,6 +295,7 @@ QVariantMap validWebTournamentGame(){
     valid.insert("currentFen","CurrentFEN");
     valid.insert("earlierFen","EarlierFEN");
     valid.insert("fullGameRKey","FullGameRKey");
+    valid.insert("lastMoves","LastMoves");
     return valid;
 }
 

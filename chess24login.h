@@ -13,14 +13,14 @@ class TournamentsModel;
 class QNetworkAccessManager;
 class DiskNetworkCookieJar;
 
-class Chess24Login:public QObject
+class LoginViewModel:public QObject
 {
     Q_OBJECT
     Q_PROPERTY(bool loggedin READ loggedIn NOTIFY loggedInChanged)
     Q_PROPERTY(QString username READ username WRITE setUsername NOTIFY usernameChanged)
     Q_PROPERTY(QString password READ password WRITE setPassword NOTIFY passwordChanged)
 public:
-    Chess24Login(QObject *parent);
+    LoginViewModel(QObject *parent);
     //QML properties
     QString username();
     QString password();

@@ -16,17 +16,22 @@
         <file>speaker.png</file>
         <file>speakeroff.png</file>
         <file>ChessBoard.qml</file>
-        <file>Resources/R.png</file>
         <file>Resources/r.png</file>
         <file>Resources/q.png</file>
-        <file>Resources/Q.png</file>
         <file>Resources/p.png</file>
-        <file>Resources/P.png</file>
         <file>Resources/n.png</file>
-        <file>Resources/N.png</file>
         <file>Resources/k.png</file>
-        <file>Resources/K.png</file>
         <file>Resources/b.png</file>
         <file>Resources/B.png</file>
+        <file>Resources/K.png</file>
+        <file>Resources/N.png</file>
+        <file>Resources/P.png</file>
+        <file>Resources/Q.png</file>
+        <file>Resources/R.png</file>
+        <file>LiveChessBoard.qml</file>
+        <file>Evaluation.qml</file>
+        <file>EvaluationChange.qml</file>
+        <file>EvaluationBar.qml</file>
+        <file>VolumeButton.qml</file>
     </qresource>
 </RCC>

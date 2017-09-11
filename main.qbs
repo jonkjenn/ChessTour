@@ -84,6 +84,7 @@ CppApplication {
         "livematchsqlmodel.h",
         "logincontroller.cpp",
         "logincontroller.h",
+        "loginmanager.h",
         "main.cpp",
         "matchsqlmodel.cpp",
         "matchsqlmodel.h",
@@ -101,6 +102,7 @@ CppApplication {
         "tournamentcontroller.h",
         "tournamentssqlmodel.cpp",
         "tournamentssqlmodel.h",
+        "userdata.h",
         "wsrequest.cpp",
         "wsrequest.h",
     ]

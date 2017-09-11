@@ -117,24 +117,10 @@ ApplicationWindow {
                     anchors.verticalCenter: roundRow.verticalCenter
                 }
 
-                Button{
-                    id:volumeOffButton
-                            width: 32
-                            height: 32
-                        background: Image{
-                            id:volumeButtonImage
-                            source: volumeSlider.volume>0?"qrc:///speaker.png":"qrc:///speakeroff.png";
-                            sourceSize.height: 32
-                            sourceSize.width: 32
-                        }
-                        onClicked: if(volumeSlider.volume>0){
-                                       volumeSlider.previousVolume = volumeSlider.value;
-                                       volumeSlider.value=0;
-                                   }else{
-                                       volumeSlider.value = volumeSlider.previousVolume;
-                                   }
-                    }
 
+                VolumeButton{
+                    id:volumeOffButton
+                }
 
                     Slider {
                         anchors.verticalCenter: volumeOffButton.verticalCenter
@@ -165,6 +151,7 @@ ApplicationWindow {
                 id: gameSelectModel
             }
 
+            RowLayout{
             RowLayout{
                 id:gameSelectView
                 visible: false
@@ -227,7 +214,17 @@ ApplicationWindow {
                 }
             }
 
+            Slider{
+                id:boardSizeSlider
+                stepSize: 8
+                from: 64
+                to: 1024
+                value: 128
+            }
+            }
+
             MatchList{
+                id:matchesView
                 Layout.fillWidth: true
                 Layout.fillHeight: true
             }

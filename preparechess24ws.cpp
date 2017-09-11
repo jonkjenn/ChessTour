@@ -28,6 +28,13 @@ void PrepareChess24WS::start()
     );
 }
 
+void PrepareChess24WS::onUserDataChanged(UserData data)
+{
+    if(data.result){
+        start();
+    }
+}
+
 void PrepareChess24WS::notificationRespons(QNetworkReply *reply)
 {
     //Should get an error signal to handle the error, we just abort here.

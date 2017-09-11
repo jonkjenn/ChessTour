@@ -16,9 +16,9 @@ Grid{
             width: outer.squareSize
             height: outer.squareSize
             color:if((9*Math.floor(index/8)-index-1)%2===0 ){
-                      return "black"
+                      return "#965c4c"
                   }else{
-                      return "white"
+                      return "#eda490"
                   }
         Image{
             width: outer.squareSize
@@ -36,8 +36,6 @@ MouseArea{
         var yindex = Math.floor(mouseY/outer.squareSize)*8;
         var i = board.itemAt(yindex+xindex);
         var j = i.children[0];
-        j.source = "qrc:///Resources/qlt.png";
-        console.log(outer.board.count);
     }
     }
 

@@ -20,70 +20,55 @@
 #include "disknetworkcookiejar.h"
 
 
-Chess24Login::Chess24Login(QObject *parent)
+LoginViewModel::LoginViewModel(QObject *parent)
     :QObject(parent)
 {
 }
 
-void Chess24Login::start(){
-
+void LoginViewModel::start(){
     //Try login from cookie
-
     qDebug() << "Trying login from cookie";
-    //connect(&c24,&Chess24::loginResult,this,&Chess24Login::loginResult);
     emit checkLoggedIn(UserData::LoginSource::COOKIE);
-
-/*    connect(&prepc24,&PrepareChess24WS::failure,[](QString error){
-       qDebug() << "Connecting to WS failed";
-       qDebug() << error;
-    });
-
-    connect(&prepc24,&PrepareChess24WS::success,this,[this](QString username, QString password){
-       if(c24ws.isConnected()){
-           return;
-       }
-       c24ws.connectWS(data,username,password);
-    });*/
 }
 
 
-void Chess24Login::setLoggedIn(bool loggedIn)
+void LoginViewModel::setLoggedIn(bool loggedIn)
 {
     m_loggedIn = loggedIn;
 }
 
-bool Chess24Login::loggedIn() const
+bool LoginViewModel::loggedIn() const
 {
     return m_loggedIn;
 }
 
-QString Chess24Login::username()
+QString LoginViewModel::username()
 {
     return m_username;
 }
 
-QString Chess24Login::password()
+QString LoginViewModel::password()
 {
     return m_password;
 }
 
-void Chess24Login::setUsername(QString username)
+void LoginViewModel::setUsername(QString username)
 {
     m_username = username;
     emit usernameChanged();
 }
 
-void Chess24Login::setPassword(QString)
+void LoginViewModel::setPassword(QString)
 {
     m_password = password();
     emit passwordChanged();
 }
 
-UserData Chess24Login::userData() const{
+UserData LoginViewModel::userData() const{
     return m_userData;
 }
 
-void Chess24Login::onLoginResult(UserData data)
+void LoginViewModel::onLoginResult(UserData data)
 {
     bool was_loggedIn = loggedIn();
     m_userData = data;
@@ -102,13 +87,8 @@ void Chess24Login::onLoginResult(UserData data)
     }
 }
 
-void Chess24Login::login(QString username, QString password)
+void LoginViewModel::login(QString username, QString password)
 {
     //Try with username and password if cookie didnt work
-    //c24.login(username,password);
     emit tryLogin(username,password);
 }
-
-/*void Chess24Login::handleMessage(Message msg)
-{
-}*/

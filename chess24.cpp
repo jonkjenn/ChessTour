@@ -1,9 +1,12 @@
 #include "chess24.h"
+
 #include <QtNetwork>
 #include <QObject>
-#include <iostream>
 #include <QJsonDocument>
+
 #include <optional>
+#include <iostream>
+
 #include "disknetworkcookiejar.h"
 
 const QString Chess24::loginurl = "https://chess24.com/en/login";
@@ -15,7 +18,7 @@ const QString Chess24::loginurl = "https://chess24.com/en/login";
 ///
 /// Fasilitates interactions with the Chess24 website
 ///
-Chess24::Chess24(QObject *parent,QNetworkAccessManager &qnam):QObject(parent),qnam(qnam)
+Chess24::Chess24(QObject *parent,QNetworkAccessManager &qnam):LoginManager(parent),qnam(qnam)
 {
 }
 

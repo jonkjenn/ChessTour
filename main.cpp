@@ -110,7 +110,7 @@ int main(int argc, char *argv[])
     qRegisterMetaType<InternalMessages::RoundChangedData>();
     qRegisterMetaType<InternalMessages::TournamentChangedData>();
 
-    Chess24Login *chess24Login = new Chess24Login(&app);
+    LoginViewModel *chess24Login = new LoginViewModel(&app);
 
     QThread *workerThread = new QThread(&app);
 
@@ -121,10 +121,11 @@ int main(int argc, char *argv[])
     qnam->setCookieJar(jar);
     qnam->moveToThread(workerThread);
 
-    Chess24 *chess24 = new Chess24(nullptr,*qnam);
-    chess24->moveToThread(workerThread);
+    LoginManager *loginManager = new Chess24(nullptr,*qnam);
+    loginManager->moveToThread(workerThread);
     PrepareChess24WS *prepc24ws = new PrepareChess24WS(nullptr,*qnam);
     prepc24ws->moveToThread(workerThread);
+
 
     //Chess24Websocket
     QTimer *websocketTokenTimer = new QTimer(nullptr);
@@ -138,8 +139,9 @@ int main(int argc, char *argv[])
 
     QWebSocket *ws = new QWebSocket();
 
-    Chess24Websocket *c24ws = new Chess24Websocket(nullptr,*ws,*prepc24ws,*websocketToken,*msgQTimer);
+    Chess24Websocket *c24ws = new Chess24Websocket(nullptr,*ws,*websocketToken,*msgQTimer);
     c24ws->moveToThread(workerThread);
+    QObject::connect(prepc24ws,&PrepareChess24WS::success,c24ws,&Chess24Websocket::connectWS);
     //End Chess24Websocket
 
 
@@ -189,10 +191,11 @@ int main(int argc, char *argv[])
     }
     //End refresh tournament list
 
-    QObject::connect(chess24Login,&Chess24Login::userDataChanged,c24ws,&Chess24Websocket::onUserdataChanged);
-    QObject::connect(chess24Login,&Chess24Login::tryLogin,chess24,&Chess24::onTryLogin);
-    QObject::connect(chess24Login,&Chess24Login::checkLoggedIn,chess24,&Chess24::onCheckLoggedIn);
-    QObject::connect(chess24,&Chess24::loginResult,chess24Login,&Chess24Login::onLoginResult);
+    QObject::connect(chess24Login,&LoginViewModel::userDataChanged,c24ws,&Chess24Websocket::onUserdataChanged);
+    QObject::connect(chess24Login,&LoginViewModel::userDataChanged,prepc24ws,&PrepareChess24WS::onUserDataChanged);
+    QObject::connect(chess24Login,&LoginViewModel::tryLogin,loginManager,&LoginManager::onTryLogin);
+    QObject::connect(chess24Login,&LoginViewModel::checkLoggedIn,loginManager,&LoginManager::onCheckLoggedIn);
+    QObject::connect(loginManager,&LoginManager::loginResult,chess24Login,&LoginViewModel::onLoginResult);
 
 
     workerThread->start();

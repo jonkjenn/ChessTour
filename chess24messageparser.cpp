@@ -30,12 +30,7 @@ void Chess24MessageParser::parseEvent(const QString &model,const QJsonObject &ro
                 QVariantMap transform = Chess24Messages::transformWebTournament(map.value("diffs").toMap());
 
                 QVariantMap changes = sqlHandler.updateTournament(tournament,transform,true);
-                emit tournamentMatchUpdates(changes.value("TournamentPk").toInt(),changes.value("match").toList());
-                /*
-                if(rsm.currentTournamentPk() == changes.value("TournamentPk").toInt()){
-                    lsm.possibleUpdates(changes.value("match").toList());
-                }*/
-                //sqlHandler.getPksColumns(msg.tournament,transform,rsm.currentPK(),lsm.currentPk());
+                emit tournamentMatchUpdates(changes.value("TournamentPk").toInt(),changes.value("match").toMap(),changes.value("matchPks").toMap());
             }
         }
         else{

@@ -29,7 +29,7 @@ public:
     void updateData(int roundPk, std::optional<int> gameNumber=std::nullopt);
 public slots:
     void onCurrentRoundChanged(InternalMessages::RoundChangedData roundData, std::optional<InternalMessages::TournamentChangedData> tournamentData);
-    void possibleUpdates(int tournamentPk, const QVariantList &map);
+    void possibleUpdates(int tournamentPk, const QVariantMap &map, const QVariantMap &matchPks);
 
 private:
     int rowFromMatchAndGameNumber(int matchNumber, int gameNumber);

@@ -29,7 +29,8 @@ Project{
             "../disknetworkcookiejar.cpp",
             "../disknetworkcookiejar.h",
             "../chesshelper.h",
-            "../chesshelper.cpp"
+            "../chesshelper.cpp",
+            "../loginmanager.h"
         ]
 
     Group {     // Properties for the produced executable
