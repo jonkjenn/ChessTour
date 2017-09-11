@@ -54,7 +54,8 @@ GridView{
             id:matchRowBack
             implicitWidth: cellWidth - 8
             implicitHeight: cellHeight - 4
-            color:Math.floor(index/matchesView.columns)%2==0?"#3E3E3E":"#2E2E2E"
+            //color:Math.floor(index/matchesView.columns)%2==0?"#3E3E3E":"#2E2E2E" //alternating rows
+            color: resultwhite === ""?"#3e3e3e":"#2e2e2e"
             border.color: "transparent"
             border.width: 2
         }

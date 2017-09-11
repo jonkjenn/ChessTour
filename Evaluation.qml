@@ -30,7 +30,6 @@ import QtQuick.Controls.Material 2.2
                             opacityTimer.restart();
 
                             if(Math.abs(enginescore-previousenginescore)/100.0>0.5){
-                                console.log("PLAY MUSIC");
                                 playMusic.play();
                             }
 

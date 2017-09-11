@@ -3,6 +3,7 @@ import QtQuick 2.0
 Rectangle{
     id:outer
     property int squareSize: Math.floor(width/8)
+    color:"transparent"
 
 Grid{
     anchors.fill:parent
@@ -15,11 +16,7 @@ Grid{
         Rectangle{
             width: outer.squareSize
             height: outer.squareSize
-            color:if((9*Math.floor(index/8)-index-1)%2===0 ){
-                      return "#965c4c"
-                  }else{
-                      return "#eda490"
-                  }
+            color:squareColor(index)
         Image{
             width: outer.squareSize
             height: outer.squareSize

@@ -265,7 +265,11 @@ void parseSubtree(QMap<QString,QVariant> &updates,const QVariantMap &valid,const
                 parseSubtree(updates,valid.value(key).toMap(),root.value(key).toMap());
             }else{
                 //Use the corrected column name from valid map
-                updates.insert(valid.value(key).toString(),root.value(key));
+                if(key == "lastMoves"){
+                    updates.insert(valid.value(key).toString(),QJsonDocument::fromVariant(root.value(key).toList()).toJson());
+                }else{
+                    updates.insert(valid.value(key).toString(),root.value(key));
+                }
             }
         }
     }

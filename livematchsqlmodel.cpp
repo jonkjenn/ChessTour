@@ -84,7 +84,8 @@ QVariant LiveMatchSqlModel::data(const QModelIndex &index, int role) const
 {
     int pk = rowToPk.value(index.row());
 
-    if(role == columnToRoleId.value("GamePosition")){
+    if(role == columnToRoleId.value("GamePosition")
+            || role == columnToRoleId.value("LastMoves")){
         return QJsonDocument::fromJson(SqlHelper::selectMatchColumn(database,pk,roleIdToColumn.value(role)).toString().toUtf8()).array();
     }
     return SqlHelper::selectMatchColumn(database,pk,roleIdToColumn.value(role));
