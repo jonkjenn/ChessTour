@@ -2,13 +2,13 @@ import QtQuick 2.0
 
                 ColumnLabel{
                     text: if(enginemate==""){
-                              var change = (enginescore-previousenginescore)/100;
+                              var change = Math.round((enginescore-previousenginescore)/10)/10;
                               if(change>0){
                                   return "+" + change;
                               }
                               return change;
                           }
-                          else{return "mate";}
+                          else{return "#";}
                     font.pixelSize: 12
                     color: if(enginemate!=""){
                                return "white"

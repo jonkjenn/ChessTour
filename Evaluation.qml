@@ -1,8 +1,9 @@
 import QtQuick 2.0
+import QtQuick.Controls.Material 2.2
 
                 ColumnLabel{
                     property int changes: 0
-                    text:enginemate==""?enginescore/100.0:"#"+enginemate
+                    text:enginemate==""?Math.round(enginescore/10)/10.0:"#"+enginemate
                     color: if(enginemate != ""){
                                return "yellow"
                            }else{
@@ -20,15 +21,16 @@ import QtQuick 2.0
                         interval: 4000
                         running: false
                         repeat: false
-                        onTriggered: engineBorder.border.color = "transparent"
+                        onTriggered: matchRowBack.border.color = "transparent"
                     }
 
                     onTextChanged:{
                         if(changes>=1){
-                            engineBorder.border.color = Material.color(Material.Amber)
+                            matchRowBack.border.color = Material.color(Material.Amber)
                             opacityTimer.restart();
 
                             if(Math.abs(enginescore-previousenginescore)/100.0>0.5){
+                                console.log("PLAY MUSIC");
                                 playMusic.play();
                             }
 

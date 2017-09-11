@@ -9,7 +9,7 @@ GridView{
     clip:true
     model:matchSqlModel
     cellHeight: boardSize+70
-    cellWidth: boardSize + boardSize/12 + 50
+    cellWidth: boardSize + boardSize/12 + 60
     property int columns: 1
     property int boardSize: boardSizeSlider.value
     //visible:model.rootIndex.valid
@@ -55,6 +55,8 @@ GridView{
             implicitWidth: cellWidth - 8
             implicitHeight: cellHeight - 4
             color:Math.floor(index/matchesView.columns)%2==0?"#3E3E3E":"#2E2E2E"
+            border.color: "transparent"
+            border.width: 2
         }
 
         ColumnLayout{
