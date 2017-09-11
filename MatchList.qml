@@ -9,7 +9,7 @@ GridView{
     clip:true
     model:matchSqlModel
     cellHeight: boardSize+70
-    cellWidth: boardSize + boardSize/10 +70
+    cellWidth: boardSize + boardSize/12 + 50
     property int columns: 1
     property int boardSize: boardSizeSlider.value
     //visible:model.rootIndex.valid
@@ -86,7 +86,7 @@ GridView{
                 EvaluationBar{
                     id:evalBar
                     Layout.preferredHeight: boardSize - 20
-                    Layout.preferredWidth: height/10
+                    Layout.preferredWidth: height/12
                     anchors.top: chessBoard.top
                 }
 
